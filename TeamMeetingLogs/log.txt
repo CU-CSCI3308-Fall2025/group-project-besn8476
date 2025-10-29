@@ -1,0 +1,12 @@
+Wed Oct 29:
+    Since last meeting:
+        Made DB Schema draft
+    
+    What will get worked on:
+        Ben B will work on Backend
+        Ben S work on endpoints and seed file
+        Connor will work on front end wireframe
+        Michael will work on front end wireframe
+
+    Challenges:
+        No challenges so far
