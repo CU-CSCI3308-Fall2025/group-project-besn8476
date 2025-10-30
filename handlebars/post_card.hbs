@@ -1,0 +1,32 @@
+{{> message}}
+
+<h2 class="text-center mb-4">Discover Events</h2>
+
+<div class="container">
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    {{#each results}}
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+          <img
+            src="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
+            class="card-img-top"
+            alt="{{name}}"
+            style="height: 250px; object-fit: cover;"
+          >
+          <div class="card-body">
+            <h5 class="card-title text-primary">{{name}}</h5>
+            <p class="card-text">
+              {{#if dates.start.localDate}}
+                <strong>Date:</strong> {{dates.start.localDate}}<br>
+              {{/if}}
+              {{#if dates.start.localTime}}
+                <strong>Time:</strong> {{dates.start.localTime}}
+              {{/if}}
+            </p>
+            <a href="{{url}}" target="_blank" class="btn btn-success w-100">Book Now</a>
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>
