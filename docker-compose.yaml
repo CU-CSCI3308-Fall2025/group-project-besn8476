@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14
+    container_name: project_db
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - project_data:/var/lib/postgresql/data
+      - ./ProjectSourceCode/create.sql:/docker-entrypoint-initdb.d/create.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: node:lts
+    container_name: project_web
+    user: "node"
+    working_dir: /home/node/app
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/home/node/app
+    command: "npm start"
+
+volumes:
+  project_data:

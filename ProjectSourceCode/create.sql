@@ -41,3 +41,21 @@ COMMENT ON COLUMN "categories"."name" IS 'Example: Textbooks, Furniture, Electro
 ALTER TABLE "posts" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
 ALTER TABLE "posts" ADD FOREIGN KEY ("category_id") REFERENCES "categories" ("id");
+
+
+
+/* Commands Used to Test and Verify the Tables Creation */
+-- docker compose up --build
+-- docker exec -it project_db psql -U postgres -d marketplace
+-- \dt
+
+/*
+           List of relations
+ Schema |    Name    | Type  |  Owner   
+--------+------------+-------+----------
+ public | categories | table | postgres
+ public | posts      | table | postgres
+ public | users      | table | postgres
+ */
+
+ -- docker compose down -v
