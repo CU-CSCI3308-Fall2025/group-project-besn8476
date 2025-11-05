@@ -1,6 +1,6 @@
 {{> message}}
 
-<h2 class="text-center mb-4">Discover Events</h2>
+<h2 class="text-center mb-4">Available Items</h2>
 
 <div class="container">
   <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -16,14 +16,13 @@
           <div class="card-body">
             <h5 class="card-title text-primary">{{name}}</h5>
             <p class="card-text">
-              {{#if dates.start.localDate}}
-                <strong>Date:</strong> {{dates.start.localDate}}<br>
+              {{#if product.info}}
+                <strong>Desc: </strong> {{product.info}}<br>
               {{/if}}
-              {{#if dates.start.localTime}}
-                <strong>Time:</strong> {{dates.start.localTime}}
+              {{#if user.contact}}
+                <strong>Contact: </strong> {{user.contact}}
               {{/if}}
             </p>
-            <a href="{{url}}" target="_blank" class="btn btn-success w-100">Book Now</a>
           </div>
         </div>
       </div>
