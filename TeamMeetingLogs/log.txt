@@ -10,3 +10,22 @@ Wed Oct 29:
 
     Challenges:
         No challenges so far
+
+Wed Nov 5:
+	What will get worked on
+        Ben S will start implementing endpoints
+        Ben B will also start implementing endpoints
+        Connor will continue front end and work on some styling
+        Michael will be doing the same as Connor, improving and finishing front end
+
+    Since last meeting
+        Ben S set up the docker-compose file and wrote the database creation script
+        Ben S and Ben B made a document and outlined all the endpoints that need to be made
+        Ben B started on the partials
+        Michael worked on home page and added some routes to link pages
+        Connor worked on partials
+
+
+    Challenges
+        Determining which endpoints were MVP 
+
