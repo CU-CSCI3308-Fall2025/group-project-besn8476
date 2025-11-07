@@ -1,12 +1,12 @@
 {
   "name": "CU-Marketplace",
   "version": "1.0.0",
-  "type": "module",
   "description": "",
-  "main": "ProjectSourceCode/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ProjectSourceCode/index.js",
+    "test": "mocha ProjectSourceCode/test/**/*.js",
+    "testandrun": "npm run test && npm run start"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,18 @@
     "express": "^5.1.0",
     "express-handlebars": "^8.0.3",
     "nodemon": "^3.1.10",
-    "pg-promise": "^12.2.0"
+    "pg-promise": "^12.2.0",
+    
+    "chai": "^6.2.0",
+    "chai-http": "^4.4.0",
+    "mocha": "^11.7.5",
+    "npm-run-all": "^4.1.5"
+  },
+  "devDependencies": {
+    "chai": "^6.2.0",
+    "chai-http": "^4.4.0",
+    "mocha": "^11.7.5",
+    "nodemon": "^2.0.7",
+    "npm-run-all": "^4.1.5"
   }
 }

@@ -1,9 +1,9 @@
 // index.js
-import express from "express";
-import { engine } from "express-handlebars";
+const express = require("express");
+const { engine } = require("express-handlebars");
 
 const app = express();
-const PORT = 4444;
+const PORT = 3000;
 
 // Log incoming requests so we see what's happening
 app.use((req, res, next) => {
@@ -31,7 +31,6 @@ app.get("/", (req, res) => {
     username: "Mike",
   });
 });
-
 
 // LOGIN
 app.get("/login", (req, res) => {
@@ -61,124 +60,45 @@ app.get("/post", (req, res) => {
 });
 
 // ---------- STATIC FILES (CSS, images, etc.) ----------
-
-// This MUST be after the routes so it doesn't override "/"
 app.use(express.static("ProjectSourceCode"));
 
-// ------------------------------
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+// ---------- TESTING ENDPOINT ----------
+app.get("/welcome", (req, res) => {
+  res.json({ status: "success", message: "Welcome!" });
 });
 
+// ---------- USER ENDPOINTS ----------
+app.post("/api/users/register", (req, res) => {});
+app.post("/api/users/login", (req, res) => {});
+app.post("/api/users/logout", (req, res) => {});
+app.get("/api/users", (req, res) => {});
+app.get("/api/users/:userId", (req, res) => {});
 
+// ---------- POST ENDPOINTS ----------
+app.get("/api/posts", (req, res) => {});
+app.get("/api/posts/:postId", (req, res) => {});
+app.get("/api/posts/user/:userId", (req, res) => {});
+app.post("/api/posts", (req, res) => {});
+app.put("/api/posts/:postId", (req, res) => {});
+app.delete("/api/posts/:postId", (req, res) => {});
+app.get("/api/posts/search", (req, res) => {});
+app.get("/api/posts/category/:name", (req, res) => {});
+app.patch("/api/posts/:postId/status", (req, res) => {});
 
+// ---------- CATEGORY ENDPOINTS ----------
+app.get("/api/categories", (req, res) => {});
+app.get("/api/categories/:categoryId", (req, res) => {});
+app.post("/api/categories", (req, res) => {});
+app.delete("/api/categories/:categoryId", (req, res) => {});
 
+// ---------- START SERVER ----------
+// ---------- START SERVER ----------
+if (require.main === module) {
+  // Only start the server if not in test mode
+  app.listen(3000, () => {
+    console.log("✅ Server running at http://localhost:3000");
+  });
+}
 
-////////////////////
-// USER ENDPOINTS //
-////////////////////
-
-// create a new user
-app.post("/api/users/register", (req, res) => {
-
-});
-
-// authenticate user and return token/session
-app.post("/api/users/login", (req, res) => {
-
-});
-
-// log user out
-app.post("/api/users/logout", (req, res) => {
-
-});
-
-// return all users
-app.get("/api/users", (req, res) => {
-
-});
-
-// get user by id
-app.get("/api/users/:userId", (req, res) => {
-
-});
-
-
-
-////////////////////
-// POST ENDPOINTS //
-////////////////////
-
-// get all posts
-app.get("/api/posts", (req, res) => {
-
-});
-
-// get post by id
-app.get("/api/posts/:postId", (req, res) => {
-
-});
-
-// get posts by user id
-app.get("/api/posts/user/:userId", (req, res) => {
-
-});
-
-
-// create post
-app.post("/api/posts", (req, res) => {
-
-});
-
-// edit post by id
-app.put("/api/posts/:postId", (req, res) => {
-
-});
-
-
-// delete post by id
-app.delete("/api/posts/:postId", (req, res) => {
-
-});
-
-
-// get posts by search keyword
-app.get("/api/posts/search?q=keyword", (req, res) => {
-
-});
-
-// get posts by category name
-app.get("/api/posts/category/:name", (req, res) => {
-
-});
-
-// update post status (available, sold)
-app.patch("/api/posts/:postId/status", (req, res) => {
-
-});
-
-
-////////////////////
-// CATEGORY ENDPOINTS
-////////////////////
-
-// get all categories
-app.get("/api/categories", (req, res) => {
-
-});
-
-// get category by id
-app.get("/api/categories/:categoryId", (req, res) => {
-
-});
-
-// create new category
-app.post("/api/categories", (req, res) => {
-
-});
-
-// update category by id
-app.delete("/api/categories/:categoryId", (req, res) => {
-
-});
+// Export the server for testing
+module.exports = app.listen(3000);
