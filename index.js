@@ -1,6 +1,8 @@
 // index.js
 import express from "express";
-import { engine } from "express-handlebars";
+import handlebars from 'express-handlebars';
+import Handlebars from "handlebars";
+
 
 const app = express();
 const PORT = 4444;
@@ -11,10 +13,16 @@ app.use((req, res, next) => {
   next();
 });
 
+const hbs = handlebars.create({
+  extname: 'hbs',
+  layoutsDir: 'ProjectSourceCode/handlebars/views/layouts',
+  partialsDir: 'ProjectSourceCode/handlebars/views/partials',
+});
+
 // Handlebars setup
-app.engine("hbs", engine({ extname: ".hbs" }));
-app.set("view engine", "hbs");
-app.set("views", "./handlebars");
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+app.set('views', 'ProjectSourceCode/handlebars/views');
 
 // Parse form submissions (for later)
 app.use(express.urlencoded({ extended: true }));
@@ -24,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 // HOME – this is what / should show
 app.get("/", (req, res) => {
   console.log("🏠 Rendering home.hbs");
-  res.render("home", {
+  res.render('pages/home.hbs', {
     layout: false,
     title: "CU Marketplace",
     loggedIn: false,
@@ -36,7 +44,7 @@ app.get("/", (req, res) => {
 // LOGIN
 app.get("/login", (req, res) => {
   console.log("🔐 Rendering login.hbs");
-  res.render("login", {
+  res.render('pages/login', {
     layout: false,
     title: "Login - CU Marketplace",
   });
@@ -45,7 +53,7 @@ app.get("/login", (req, res) => {
 // REGISTER
 app.get("/register", (req, res) => {
   console.log("📝 Rendering register.hbs");
-  res.render("register", {
+  res.render('pages/register', {
     layout: false,
     title: "Register - CU Marketplace",
   });
@@ -54,7 +62,7 @@ app.get("/register", (req, res) => {
 // POST ITEM
 app.get("/post", (req, res) => {
   console.log("📦 Rendering post_card.hbs");
-  res.render("post_card", {
+  res.render('pages/post_card', {
     layout: false,
     title: "Post an Item - CU Marketplace",
   });
@@ -67,9 +75,8 @@ app.use(express.static("ProjectSourceCode"));
 
 // ------------------------------
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
+app.listen(4444);
+console.log('Server is listening on port 3000');
 
 
 
@@ -144,9 +151,9 @@ app.delete("/api/posts/:postId", (req, res) => {
 
 
 // get posts by search keyword
-app.get("/api/posts/search?q=keyword", (req, res) => {
+//app.get("/api/posts/search?q=keyword", (req, res) => {
 
-});
+//});
 
 // get posts by category name
 app.get("/api/posts/category/:name", (req, res) => {
