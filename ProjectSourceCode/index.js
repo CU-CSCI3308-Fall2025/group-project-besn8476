@@ -1,6 +1,9 @@
 // index.js
 import express from "express";
 import { engine } from "express-handlebars";
+import bcrypt from "bcryptjs";
+import pg from "pg-promise";
+import bodyParser from "body-parser";
 
 const app = express();
 const PORT = 4444;
@@ -80,13 +83,61 @@ app.listen(PORT, () => {
 ////////////////////
 
 // create a new user
-app.post("/api/users/register", (req, res) => {
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
 
+  try {
+    // Find user in DB
+    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
+    if (!user) {
+      // If user not found → redirect to register
+      return res.redirect('pages/register');
+    }
+
+    // Compare password hash
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.render('pages/login', { message: 'Incorrect username or password.' });
+    }
+
+    // Save user in session
+    req.session.user = { id: user.id, username: user.username };
+
+    // Redirect to discover page
+    return res.redirect('handlebars/home');
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.render('pages/login', { message: 'Error logging in. Please try again.' });
+  }
 });
 
 // authenticate user and return token/session
-app.post("/api/users/login", (req, res) => {
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
+  try {
+    // Find user in DB
+    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
+    if (!user) {
+      // If user not found → redirect to register
+      return res.redirect('pages/register');
+    }
+
+    // Compare password hash
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.render('pages/login', { message: 'Incorrect username or password.' });
+    }
+
+    // Save user in session
+    req.session.user = { id: user.id, username: user.username };
+
+    // Redirect to discover page
+    return res.redirect('handlebars/home');
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.render('pages/login', { message: 'Error logging in. Please try again.' });
+  }
 });
 
 // log user out
