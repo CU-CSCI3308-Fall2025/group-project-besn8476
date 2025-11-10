@@ -1,8 +1,11 @@
 // index.js
+import path from "path"
 import express from "express";
 import handlebars from 'express-handlebars';
-import Handlebars from "handlebars";
+import Handlebars from 'handlebars';
+import bodyParser from "body-parser";
 
+const __dirname = import.meta.dirname;
 
 const app = express();
 const PORT = 4444;
@@ -23,12 +26,12 @@ const hbs = handlebars.create({
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', 'ProjectSourceCode/handlebars/views');
+app.use(bodyParser.json());
 
 // Parse form submissions (for later)
 app.use(express.urlencoded({ extended: true }));
 
 // ---------- ROUTES ----------
-
 // HOME – this is what / should show
 app.get("/", (req, res) => {
   console.log("🏠 Rendering home.hbs");
@@ -47,6 +50,15 @@ app.get("/login", (req, res) => {
   res.render('pages/login', {
     layout: false,
     title: "Login - CU Marketplace",
+  });
+});
+
+// LOGOUT
+app.get("/logout", (req, res) => {
+  console.log("🔐 Rendering login.hbs");
+  res.render('pages/logout', {
+    layout: false,
+    title: "Logout - CU Marketplace",
   });
 });
 
