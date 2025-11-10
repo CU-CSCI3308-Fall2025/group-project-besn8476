@@ -1,5 +1,3 @@
-
-
 // <!-- Import Dependencies -->
 import express from "express";
 const app = express();
@@ -12,6 +10,7 @@ import session from "express-session";
 import bcrypt from "bcryptjs";
 import axios from "axios";
 
+const __dirname = import.meta.dirname;
 
 // <!-- Connect to DB -->
 const hbs = handlebars.create({
@@ -77,7 +76,6 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // ---------- ROUTES ----------
-
 // HOME – this is what / should show
 app.get("/", (req, res) => {
   console.log("🏠 Rendering home.hbs");
@@ -96,6 +94,15 @@ app.get("/login", (req, res) => {
   res.render('pages/login', {
     layout: false,
     title: "Login - CU Marketplace",
+  });
+});
+
+// LOGOUT
+app.get("/logout", (req, res) => {
+  console.log("🔐 Rendering login.hbs");
+  res.render('pages/logout', {
+    layout: false,
+    title: "Logout - CU Marketplace",
   });
 });
 
