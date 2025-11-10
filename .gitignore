@@ -1,3 +1,3 @@
-#node_modules
-#package-lock.json
-# removed .env for now so it gets pushed in commit
+node_modules
+package-lock.json
+.env
