@@ -184,8 +184,29 @@ app.post("/api/users/register", async (req, res) => {
 });
 
 // authenticate user and return token/session
-app.post("/api/users/login", (req, res) => {
+app.post("api/users/login", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await db.oneOrNone(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
+    if (!user) {
+      return res.render("pages/login", { message: "User not found." });
+    }
 
+    const valid = await bcrypt.compare(password, hashedPassword);
+    if (!valid) {
+      return res.render("pages/login", { message: "Incorrect password." });
+    }
+
+    // (Assuming session middleware later)
+    req.session = { user: user.username };
+    res.redirect("views/pages/home");
+  } catch (err) {
+    console.error("Login error:", err);
+    res.render("pages/login", { message: "Error logging in." });
+  }
 });
 
 // log user out
