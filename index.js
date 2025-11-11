@@ -1,12 +1,65 @@
-// index.js
+// <!-- Import Dependencies -->
 import express from "express";
-import { engine } from "express-handlebars";
-import bcrypt from "bcryptjs";
-import pg from "pg-promise";
-import bodyParser from "body-parser";
-
 const app = express();
-const PORT = 4444;
+import handlebars from "express-handlebars";
+import Handlebars from "handlebars";
+import path from "path";
+import pgPromise from "pg-promise";
+import bodyParser from "body-parser";
+import session from "express-session";
+import bcrypt from "bcryptjs";
+import axios from "axios";
+
+const __dirname = import.meta.dirname;
+
+// <!-- Connect to DB -->
+const hbs = handlebars.create({
+  extname: 'hbs',
+  layoutsDir: 'ProjectSourceCode/handlebars/views/layouts',
+  partialsDir: 'ProjectSourceCode/handlebars/views/partials',
+});
+
+
+const pgp = pgPromise();
+
+const DB_HOST = process.env.DB_HOST || "localhost";
+const DB_PORT = process.env.DB_PORT || 5432;
+
+const connectionString = `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${process.env.POSTGRES_DB}`;
+const db = pgp(connectionString);
+
+
+// test database
+db.connect()
+  .then((obj) => {
+    console.log("Database connection successful"); // this message in the docker compose logs
+    obj.done(); // success, release the connection;
+  })
+  .catch((error) => {
+    console.log("ERROR:", error.message || error);
+  });
+
+
+// <!-- App Settings -->
+// Handlebars setup
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+app.set('views', 'ProjectSourceCode/handlebars/views');
+app.use(bodyParser.json());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: false,
+    resave: false,
+  })
+);
+
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 
 // Log incoming requests so we see what's happening
 app.use((req, res, next) => {
@@ -14,20 +67,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// Handlebars setup
-app.engine("hbs", engine({ extname: ".hbs" }));
-app.set("view engine", "hbs");
-app.set("views", "./handlebars");
-
 // Parse form submissions (for later)
 app.use(express.urlencoded({ extended: true }));
 
-// ---------- ROUTES ----------
 
+
+
+
+
+// ---------- ROUTES ----------
 // HOME – this is what / should show
 app.get("/", (req, res) => {
   console.log("🏠 Rendering home.hbs");
-  res.render("home", {
+  res.render('pages/home.hbs', {
     layout: false,
     title: "CU Marketplace",
     loggedIn: false,
@@ -39,16 +91,25 @@ app.get("/", (req, res) => {
 // LOGIN
 app.get("/login", (req, res) => {
   console.log("🔐 Rendering login.hbs");
-  res.render("login", {
+  res.render('pages/login', {
     layout: false,
     title: "Login - CU Marketplace",
+  });
+});
+
+// LOGOUT
+app.get("/logout", (req, res) => {
+  console.log("🔐 Rendering login.hbs");
+  res.render('pages/logout', {
+    layout: false,
+    title: "Logout - CU Marketplace",
   });
 });
 
 // REGISTER
 app.get("/register", (req, res) => {
   console.log("📝 Rendering register.hbs");
-  res.render("register", {
+  res.render('pages/register', {
     layout: false,
     title: "Register - CU Marketplace",
   });
@@ -57,7 +118,7 @@ app.get("/register", (req, res) => {
 // POST ITEM
 app.get("/post", (req, res) => {
   console.log("📦 Rendering post_card.hbs");
-  res.render("post_card", {
+  res.render('pages/post_card', {
     layout: false,
     title: "Post an Item - CU Marketplace",
   });
@@ -70,9 +131,7 @@ app.use(express.static("ProjectSourceCode"));
 
 // ------------------------------
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
+
 
 
 
@@ -83,60 +142,70 @@ app.listen(PORT, () => {
 ////////////////////
 
 // create a new user
-app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-
+app.post("/api/users/register", async (req, res) => {
   try {
-    // Find user in DB
-    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
-    if (!user) {
-      // If user not found → redirect to register
-      return res.redirect('pages/register');
+    const { username, password, email, phone_number } = req.body;
+
+    // Basic validation
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password are required." });
     }
 
-    // Compare password hash
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return res.render('pages/login', { message: 'Incorrect username or password.' });
+    // Check if username or email already exists
+    const existingUser = await db.oneOrNone(
+      `SELECT * FROM users WHERE username = $1 OR email = $2`,
+      [username, email]
+    );
+
+    if (existingUser) {
+      return res.status(409).json({ error: "Username or email already taken." });
     }
 
-    // Save user in session
-    req.session.user = { id: user.id, username: user.username };
+    // Hash password 
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Redirect to discover page
-    return res.redirect('handlebars/home');
-  } catch (error) {
-    console.error('Login error:', error);
-    return res.render('pages/login', { message: 'Error logging in. Please try again.' });
+    // Insert into DB
+    const newUser = await db.one(
+      `INSERT INTO users (username, password, email, phone_number)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, username, email, phone_number, created_at;`,
+      [username, hashedPassword, email, phone_number]
+    );
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: newUser,
+    });
+
+  } catch (err) {
+    console.error("Error registering user:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // authenticate user and return token/session
-app.post('/login', async (req, res) => {
+app.post("api/users/login", async (req, res) => {
   const { username, password } = req.body;
-
   try {
-    // Find user in DB
-    const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
+    const user = await db.oneOrNone(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
     if (!user) {
-      // If user not found → redirect to register
-      return res.redirect('pages/register');
+      return res.render("pages/login", { message: "User not found." });
     }
 
-    // Compare password hash
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return res.render('pages/login', { message: 'Incorrect username or password.' });
+    const valid = await bcrypt.compare(password, hashedPassword);
+    if (!valid) {
+      return res.render("pages/login", { message: "Incorrect password." });
     }
 
-    // Save user in session
-    req.session.user = { id: user.id, username: user.username };
-
-    // Redirect to discover page
-    return res.redirect('handlebars/home');
-  } catch (error) {
-    console.error('Login error:', error);
-    return res.render('pages/login', { message: 'Error logging in. Please try again.' });
+    // (Assuming session middleware later)
+    req.session = { user: user.username };
+    res.redirect("views/pages/home");
+  } catch (err) {
+    console.error("Login error:", err);
+    res.render("pages/login", { message: "Error logging in." });
   }
 });
 
@@ -146,8 +215,20 @@ app.post("/api/users/logout", (req, res) => {
 });
 
 // return all users
-app.get("/api/users", (req, res) => {
+app.get("/api/users", async (req, res) => {
+  try {
+    // Fetch all users (excluding passwords for safety)
+    const users = await db.any(`
+      SELECT id, username, email, phone_number, created_at
+      FROM users
+      ORDER BY created_at DESC;
+    `);
 
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // get user by id
@@ -163,12 +244,12 @@ app.get("/api/users/:userId", (req, res) => {
 
 // get all posts
 app.get("/api/posts", (req, res) => {
-
+  
 });
 
 // get post by id
 app.get("/api/posts/:postId", (req, res) => {
-
+  
 });
 
 // get posts by user id
@@ -179,7 +260,7 @@ app.get("/api/posts/user/:userId", (req, res) => {
 
 // create post
 app.post("/api/posts", (req, res) => {
-
+  
 });
 
 // edit post by id
@@ -195,9 +276,9 @@ app.delete("/api/posts/:postId", (req, res) => {
 
 
 // get posts by search keyword
-app.get("/api/posts/search", (req, res) => {
+//app.get("/api/posts/search?q=keyword", (req, res) => {
 
-});
+//});
 
 // get posts by category name
 app.get("/api/posts/category/:name", (req, res) => {
@@ -233,3 +314,8 @@ app.post("/api/categories", (req, res) => {
 app.delete("/api/categories/:categoryId", (req, res) => {
 
 });
+
+
+// <!-- Start Server-->
+app.listen(4444);
+console.log('Server is listening on port 4444');
