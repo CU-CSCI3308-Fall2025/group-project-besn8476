@@ -184,7 +184,7 @@ app.post("/api/users/register", async (req, res) => {
 });
 
 // authenticate user and return token/session
-app.post("api/users/login", async (req, res) => {
+app.post("/api/users/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await db.oneOrNone(
@@ -195,10 +195,17 @@ app.post("api/users/login", async (req, res) => {
       return res.render("pages/login", { message: "User not found." });
     }
 
-    const valid = await bcrypt.compare(password, hashedPassword);
+    const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return res.render("pages/login", { message: "Incorrect password." });
     }
+    // commented out bc it was used for testing
+    /*
+    else{
+      res.json({ message: "login successful",
+      user: { id: user.id, username: user.username, email: user.email } });
+    }
+    */
 
     // (Assuming session middleware later)
     req.session = { user: user.username };
