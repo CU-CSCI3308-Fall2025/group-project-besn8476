@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <section class="hero">
+    <h1>CU Marketplace</h1>
+    <p class="hero-tagline">
+      Buy, sell, and trade items with other CU students!
+    </p>
+
+    {{#if loggedIn}}
+      <p class="hero-subtext">
+        Welcome back, {{username}}!
+      </p>
+      <div class="hero-buttons">
+        <a href="/browse" class="btn">Browse Listings</a>
+        <a href="/post" class="btn btn-secondary">Post an Item</a>
+        <a href="/logout" class="btn btn-ghost">Logout</a>
+      </div>
+    {{else}}
+      <p class="hero-subtext">
+        Log in with your CU credentials to get started.
+      </p>
+      <div class="hero-buttons">
+        <a href="/login" class="btn">Log In</a>
+        <a href="/register" class="btn btn-secondary">Create Account</a>
+      </div>
+    {{/if}}
+  </section>
+
+  <section class="section section-alt">
+    <h2>How It Works</h2>
+    <ol class="steps-list">
+      <li><strong>Sign up</strong> with your CU email.</li>
+      <li><strong>Browse</strong> listings from other students.</li>
+      <li><strong>Post</strong> items you want to sell or trade.</li>
+      <li><strong>Connect</strong> with other students to make a deal.</li>
+    </ol>
+  </section>
+
+  <footer class="site-footer">
+    <p>&copy; 2024 CU Marketplace. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

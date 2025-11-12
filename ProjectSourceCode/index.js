@@ -12,9 +12,9 @@ app.use((req, res, next) => {
 });
 
 // Handlebars setup
-app.engine("hbs", engine({ extname: ".hbs", partialsDir: "./handlebars/views/partials" })); //tell handlebars where to find partials
+app.engine("hbs", engine({ extname: ".hbs", partialsDir: "./ProjectSourceCode/handlebars/views/partials" })); //tell handlebars where to find partials
 app.set("view engine", "hbs");
-app.set("views", "./handlebars/views/pages");
+app.set("views", "./ProjectSourceCode/handlebars/views/pages");
 
 // Parse form submissions (for later)
 app.use(express.urlencoded({ extended: true }));

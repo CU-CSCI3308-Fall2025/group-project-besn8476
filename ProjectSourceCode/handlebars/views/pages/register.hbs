@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <a href="/" class="site-brand">CU Marketplace</a>
+      <div class="site-nav-links">
+        <a href="/browse">Browse</a>
+        <a href="/post">Post</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      </div>
+    </div>
+  </nav>
+
+  {{> message}}
+
+  <section class="section">
+    <h2 class="text-center">Register (CU Student Email Required)</h2>
+
+    <form action="/register" method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          type="text" 
+          id="username" 
+          name="username" 
+          placeholder="Enter username" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="email">CU Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          placeholder="Enter your @colorado.edu email" 
+          pattern=".+@colorado\.edu" 
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          placeholder="Enter password" 
+          required
+        >
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn">Register</button>
+        <a href="/login" class="btn btn-secondary">Back to Login</a>
+      </div>
+
+      <p class="form-footer">
+        Already have an account? <a href="/login">Login here</a>
+      </p>
+    </form>
+  </section>
+
+</body>
+</html>
