@@ -79,11 +79,15 @@ app.use(express.urlencoded({ extended: true }));
 // HOME – this is what / should show
 app.get("/", (req, res) => {
   console.log("🏠 Rendering home.hbs");
+
+  const loggedIn = !!req.session.user; // true if user session exists
+  const user = req.session.user; 
+
   res.render('pages/home.hbs', {
     layout: false,
     title: "CU Marketplace",
-    loggedIn: false,
-    username: "Mike",
+    loggedIn,
+    user,
   });
 });
 
@@ -199,17 +203,11 @@ app.post("/api/users/login", async (req, res) => {
     if (!valid) {
       return res.render("pages/login", { message: "Incorrect password." });
     }
-    // commented out bc it was used for testing
-    /*
-    else{
-      res.json({ message: "login successful",
-      user: { id: user.id, username: user.username, email: user.email } });
-    }
-    */
+    
 
-    // (Assuming session middleware later)
-    req.session = { user: user.username };
-    res.redirect("views/pages/home");
+    req.session.user = user;
+    console.log("Login successful for", user.username);
+    res.redirect("/");
   } catch (err) {
     console.error("Login error:", err);
     res.render("pages/login", { message: "Error logging in." });
