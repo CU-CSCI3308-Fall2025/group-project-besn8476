@@ -333,3 +333,5 @@ app.delete("/api/categories/:categoryId", (req, res) => {
 // <!-- Start Server-->
 app.listen(4444);
 console.log('Server is listening on port 4444');
+
+export default app;
