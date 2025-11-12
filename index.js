@@ -325,23 +325,77 @@ app.patch("/api/posts/:postId/status", (req, res) => {
 ////////////////////
 
 // get all categories
-app.get("/api/categories", (req, res) => {
-
+app.get("/api/categories", async (req, res) => {
+  try{
+    const categories = await db.any(`
+      SELECT id, name
+      FROM categories
+      ORDER BY name ASC;
+    `);
+    res.json(categories);
+  }catch(err){
+    console.error("Error fetching categories:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // get category by id
-app.get("/api/categories/:categoryId", (req, res) => {
-
+app.get("/api/categories/:categoryId", async (req, res) => {
+  try{
+    const id = req.params.categoryId;
+    const category = await db.oneOrNone(`
+      SELECT id, name
+      FROM categories
+      WHERE id = $1;
+    `, [id]);
+    if(!category){
+      return  res.status(404).json({ error: "Category not found" });
+    }
+    res.json(category);
+  }catch(err){
+    console.error("Error fetching category:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // create new category
-app.post("/api/categories", (req, res) => {
-
+app.post("/api/categories", async (req, res) => {
+  try{
+    const { name } = req.body;
+    if(!name){
+      return res.status(400).json({ error: "Category name is required" });
+    }
+    const newCategory = await db.one(`
+      INSERT INTO categories (name)
+      VALUES ($1)
+      RETURNING id, name;
+    `, [name]);
+    res.status(201).json({
+      message: "Category created successfully",
+      category: newCategory,
+    });
+  }catch(err){
+    console.error("Error creating category:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-// update category by id
-app.delete("/api/categories/:categoryId", (req, res) => {
-
+// delete category by id
+app.delete("/api/categories/:categoryId", async (req, res) => {
+  try{
+    const id = req.params.categoryId;
+    const result = await db.result(`
+      DELETE FROM categories
+      WHERE id = $1;
+    `, [id]);
+    if(result.rowCount === 0){
+      return res.status(404).json({ error: "Category not found" });
+    }
+    res.status(200).json({ message: "Category deleted successfully" });
+  }catch(err){
+    console.error("Error deleting category:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 
