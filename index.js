@@ -216,10 +216,19 @@ app.post("/api/users/login", async (req, res) => {
   }
 });
 
-// log user out
+// logout user
 app.post("/api/users/logout", (req, res) => {
-
+  // If the user is logged in, destroy the session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ message: "Error logging out" });
+    }
+    // Send response
+    res.json({ message: "Logged out successfully" });
+  });
 });
+
 
 // return all users
 app.get("/api/users", async (req, res) => {
