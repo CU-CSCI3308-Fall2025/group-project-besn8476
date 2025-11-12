@@ -29,3 +29,22 @@ Wed Nov 5:
     Challenges
         Determining which endpoints were MVP 
 
+
+Wed Nov 12:
+	What will get worked on
+        Both Bens will make Post Endpoints
+        Connor will make main page look better
+        Connor and Michael will connect endpoints to front end
+
+    Since last meeting
+        Ben S and Ben B wrote all the user endpoints
+        Ben S wrote db config
+        Ben S wrote all category endpoints
+        Michael did styling
+        Connor fixed handlebars nad fixed css bug
+
+
+    Challenges
+        Talked about doing Lab 10 a different way since we used ES Modules. TA told team it was ok
+
+

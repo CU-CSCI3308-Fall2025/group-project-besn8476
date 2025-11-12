@@ -18,8 +18,10 @@
     "pg-promise": "^12.2.0"
   },
   "scripts": {
+    "prestart": "npm install",
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --extension js,cjs --exit",
+    "testandrun": "npm run prestart && npm run test && npm start"
   },
   "repository": {
     "type": "git",
@@ -31,5 +33,11 @@
   "bugs": {
     "url": "https://github.com/CU-CSCI3308-Fall2025/group-project-besn8476/issues"
   },
-  "homepage": "https://github.com/CU-CSCI3308-Fall2025/group-project-besn8476#readme"
+  "homepage": "https://github.com/CU-CSCI3308-Fall2025/group-project-besn8476#readme",
+  "devDependencies": {
+    "chai": "^6.2.1",
+    "chai-http": "^4.4.0",
+    "mocha": "^11.7.5",
+    "supertest": "^7.1.4"
+  }
 }
