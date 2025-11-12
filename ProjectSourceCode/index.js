@@ -12,9 +12,9 @@ app.use((req, res, next) => {
 });
 
 // Handlebars setup
-app.engine("hbs", engine({ extname: ".hbs" }));
+app.engine("hbs", engine({ extname: ".hbs", partialsDir: "./handlebars/views/partials" })); //tell handlebars where to find partials
 app.set("view engine", "hbs");
-app.set("views", "./handlebars");
+app.set("views", "./handlebars/views/pages");
 
 // Parse form submissions (for later)
 app.use(express.urlencoded({ extended: true }));
@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // HOME – this is what / should show
 app.get("/", (req, res) => {
-  console.log("🏠 Rendering home.hbs");
+  console.log("Rendering home.hbs");
   res.render("home", {
     layout: false,
     title: "CU Marketplace",
@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
 
 // LOGIN
 app.get("/login", (req, res) => {
-  console.log("🔐 Rendering login.hbs");
+  console.log("Rendering login.hbs");
   res.render("login", {
     layout: false,
     title: "Login - CU Marketplace",
@@ -44,7 +44,7 @@ app.get("/login", (req, res) => {
 
 // REGISTER
 app.get("/register", (req, res) => {
-  console.log("📝 Rendering register.hbs");
+  console.log("Rendering register.hbs");
   res.render("register", {
     layout: false,
     title: "Register - CU Marketplace",
@@ -53,10 +53,33 @@ app.get("/register", (req, res) => {
 
 // POST ITEM
 app.get("/post", (req, res) => {
-  console.log("📦 Rendering post_card.hbs");
+  console.log("Rendering post_card.hbs");
+  
+  //temporary mock data for testing
+  const sampleResults = [{
+    name: "CSCI 2270 Textbook",
+      product: { info: "Gently used, 8/10 condition" },
+      user: { contact: "mike@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
+    },
+    {
+      name: "Mini Fridge",
+      product: { info: "Works perfectly, pickup only" },
+      user: { contact: "student1@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Mini+Fridge" }]
+    },
+    {
+      name: "TI-84 Calculator",
+      product: { info: "Like new, includes batteries" },
+      user: { contact: "jane@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Calculator" }]
+  }];
+
   res.render("post_card", {
     layout: false,
     title: "Post an Item - CU Marketplace",
+    results: sampleResults,
+    message: "Sample items loaded successfully.",
   });
 });
 
@@ -144,8 +167,14 @@ app.delete("/api/posts/:postId", (req, res) => {
 
 
 // get posts by search keyword
-app.get("/api/posts/search?q=keyword", (req, res) => {
+app.get("/api/posts/search", (req, res) => {
+  const keyword = req.query.q;
 
+  if (!keyword) {
+    return res.status(400).json({ error: "Missing search keyword 'q' parameter" });
+  }
+
+  res.json({ message: `Searching posts with keyword: ${keyword}` });
 });
 
 // get posts by category name
