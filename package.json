@@ -5,9 +5,10 @@
   "description": "",
   "main": "ProjectSourceCode/index.js",
   "scripts": {
-    "start": "node ProjectSourceCode/index.js",
-    "dev": "nodemon ProjectSourceCode/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prestart": "npm install",
+    "start": "node index.js",
+    "test": "mocha --extension js,cjs --exit",
+    "testandrun": "npm run prestart && npm run test && npm start"
   },
   "repository": {
     "type": "git",
@@ -32,5 +33,11 @@
     "handlebars": "^4.7.8",
     "nodemon": "^3.1.10",
     "pg-promise": "^12.2.0"
+    
+  "devDependencies": {
+    "chai": "^6.2.1",
+    "chai-http": "^4.4.0",
+    "mocha": "^11.7.5",
+    "supertest": "^7.1.4"
   }
 }

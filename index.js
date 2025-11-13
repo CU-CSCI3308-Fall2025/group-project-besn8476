@@ -79,11 +79,15 @@ app.use(express.urlencoded({ extended: true }));
 // HOME – this is what / should show
 app.get("/", (req, res) => {
   console.log("🏠 Rendering home.hbs");
+
+  const loggedIn = !!req.session.user; // true if user session exists
+  const user = req.session.user; 
+
   res.render('pages/home.hbs', {
     layout: false,
     title: "CU Marketplace",
-    loggedIn: false,
-    username: "Mike",
+    loggedIn,
+    user,
   });
 });
 
@@ -199,17 +203,11 @@ app.post("/api/users/login", async (req, res) => {
     if (!valid) {
       return res.render("pages/login", { message: "Incorrect password." });
     }
-    // commented out bc it was used for testing
-    /*
-    else{
-      res.json({ message: "login successful",
-      user: { id: user.id, username: user.username, email: user.email } });
-    }
-    */
+    
 
-    // (Assuming session middleware later)
-    req.session = { user: user.username };
-    res.redirect("views/pages/home");
+    req.session.user = user;
+    console.log("Login successful for", user.username);
+    res.redirect("/");
   } catch (err) {
     console.error("Login error:", err);
     res.render("pages/login", { message: "Error logging in." });
@@ -248,8 +246,23 @@ app.get("/api/users", async (req, res) => {
 });
 
 // get user by id
-app.get("/api/users/:userId", (req, res) => {
-
+app.get("/api/users/:userId", async (req, res) => {
+    try{
+      const {userId} = req.params;
+      const user = await db.oneOrNone(
+        `SELECT id, username, email, phone_number, created_at
+        FROM users
+        WHERE id = $1;`,
+        [userId]
+      );
+      if(!user){
+        return res.status(404).json({error: "User not found."});
+      }
+      res.status(200).json(user);
+    } catch(err){
+      console.error("Error fetching user:", err);
+      res.status(500).json({error: "Internal server error"});
+    }
 });
 
 
@@ -312,26 +325,82 @@ app.patch("/api/posts/:postId/status", (req, res) => {
 ////////////////////
 
 // get all categories
-app.get("/api/categories", (req, res) => {
-
+app.get("/api/categories", async (req, res) => {
+  try{
+    const categories = await db.any(`
+      SELECT id, name
+      FROM categories
+      ORDER BY name ASC;
+    `);
+    res.json(categories);
+  }catch(err){
+    console.error("Error fetching categories:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // get category by id
-app.get("/api/categories/:categoryId", (req, res) => {
-
+app.get("/api/categories/:categoryId", async (req, res) => {
+  try{
+    const id = req.params.categoryId;
+    const category = await db.oneOrNone(`
+      SELECT id, name
+      FROM categories
+      WHERE id = $1;
+    `, [id]);
+    if(!category){
+      return  res.status(404).json({ error: "Category not found" });
+    }
+    res.json(category);
+  }catch(err){
+    console.error("Error fetching category:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // create new category
-app.post("/api/categories", (req, res) => {
-
+app.post("/api/categories", async (req, res) => {
+  try{
+    const { name } = req.body;
+    if(!name){
+      return res.status(400).json({ error: "Category name is required" });
+    }
+    const newCategory = await db.one(`
+      INSERT INTO categories (name)
+      VALUES ($1)
+      RETURNING id, name;
+    `, [name]);
+    res.status(201).json({
+      message: "Category created successfully",
+      category: newCategory,
+    });
+  }catch(err){
+    console.error("Error creating category:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-// update category by id
-app.delete("/api/categories/:categoryId", (req, res) => {
-
+// delete category by id
+app.delete("/api/categories/:categoryId", async (req, res) => {
+  try{
+    const id = req.params.categoryId;
+    const result = await db.result(`
+      DELETE FROM categories
+      WHERE id = $1;
+    `, [id]);
+    if(result.rowCount === 0){
+      return res.status(404).json({ error: "Category not found" });
+    }
+    res.status(200).json({ message: "Category deleted successfully" });
+  }catch(err){
+    console.error("Error deleting category:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 
 // <!-- Start Server-->
 app.listen(4444);
 console.log('Server is listening on port 4444');
+
+export default app;

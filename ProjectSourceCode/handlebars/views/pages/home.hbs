@@ -15,14 +15,14 @@
     </p>
 
     {{#if loggedIn}}
-      <p class="hero-subtext">
-        Welcome back, {{username}}!
-      </p>
-      <div class="hero-buttons">
-        <a href="/browse" class="btn">Browse Listings</a>
-        <a href="/post" class="btn btn-secondary">Post an Item</a>
-        <a href="/logout" class="btn btn-ghost">Logout</a>
-      </div>
+        <p class="hero-subtext">
+            Welcome back, {{user.username}}!
+        </p>
+        <div class="hero-buttons">
+            <a href="/browse" class="btn">Browse Listings</a>
+            <a href="/post" class="btn btn-secondary">Post an Item</a>
+            <a href="/logout" class="btn btn-ghost">Logout</a>
+        </div>
     {{else}}
       <p class="hero-subtext">
         Log in with your CU credentials to get started.
