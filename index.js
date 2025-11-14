@@ -121,10 +121,33 @@ app.get("/register", (req, res) => {
 
 // POST ITEM
 app.get("/post", (req, res) => {
-  console.log("📦 Rendering post_card.hbs");
-  res.render('pages/post_card', {
+  console.log("Rendering post_card.hbs");
+  
+  //temporary mock data for testing
+  const sampleResults = [{
+    name: "CSCI 2270 Textbook",
+      product: { info: "Gently used, 8/10 condition" },
+      user: { contact: "mike@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
+    },
+    {
+      name: "Mini Fridge",
+      product: { info: "Works perfectly, pickup only" },
+      user: { contact: "student1@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Mini+Fridge" }]
+    },
+    {
+      name: "TI-84 Calculator",
+      product: { info: "Like new, includes batteries" },
+      user: { contact: "jane@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Calculator" }]
+  }];
+
+  res.render("pages/post_card", {
     layout: false,
     title: "Post an Item - CU Marketplace",
+    results: sampleResults,
+    message: "Sample items loaded successfully.",
   });
 });
 
@@ -134,10 +157,6 @@ app.get("/post", (req, res) => {
 app.use(express.static("ProjectSourceCode"));
 
 // ------------------------------
-
-
-
-
 
 
 
