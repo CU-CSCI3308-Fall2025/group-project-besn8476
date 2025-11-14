@@ -4,28 +4,31 @@
 
 <section class="section">
   <h2 class="section-title">Available Items</h2>
-
-  <div class="post-grid">
-    {{#each results}}
-      <div class="post-card">
-        <img
-          src="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
-          alt="{{name}}"
-          class="post-card-image"
-        >
-        <div class="post-card-content">
-          <h3 class="post-card-title">{{name}}</h3>
-          <p class="post-card-description">
-            {{#if product.info}}
-              <strong>Desc:</strong> {{product.info}}<br>
-            {{/if}}
-            {{#if user.contact}}
-              <strong>Contact:</strong> {{user.contact}}
-            {{/if}}
-          </p>
-        </div>
-      </div>
-    {{/each}}
+  <div class="container">
+    <div class="row row-cols-1 row-cols-md-3 g-4">  
+        {{#each results}}
+          <div class="col">
+            <div class="card">
+                <img
+                  src="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
+                  alt="{{name}}"
+                  class="card-image"
+                >
+                <div class="card-body">
+                    <h3 class="card-title">{{name}}</h3>
+                    <p class="card-description">
+                      {{#if product.info}}
+                        <strong>Desc:</strong> {{product.info}}<br>
+                      {{/if}}
+                      {{#if user.contact}}
+                        <strong>Contact:</strong> {{user.contact}}
+                      {{/if}}
+                    </p>
+                </div>
+            </div>
+          </div>
+        {{/each}}
+    </div>
   </div>
 </section>
 {{>footer}}

@@ -141,7 +141,19 @@ app.get("/post", (req, res) => {
       product: { info: "Like new, includes batteries" },
       user: { contact: "jane@colorado.edu" },
       images: [{ url: "https://via.placeholder.com/400x250?text=Calculator" }]
-  }];
+    },
+    {
+        name: "1993 Honda Accord",
+      product: { info: "Has Flintsone-esq engine" },
+      user: { contact: "fred@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
+    },
+    {
+        name: "Dog",
+      product: { info: "One (1) Dog" },
+      user: { contact: "singulardog@colorado.edu" },
+      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
+    }];
 
   res.render("pages/post_card", {
     layout: false,
