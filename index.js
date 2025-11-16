@@ -207,10 +207,10 @@ app.post("/api/users/register", async (req, res) => {
       [username, hashedPassword, email, phone_number]
     );
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user: newUser,
-    });
+    // user will be auto logged in once registered
+    req.session.user = newUser;
+    console.log("Login successful for", newUser.username);
+    res.redirect("/");
 
   } catch (err) {
     console.error("Error registering user:", err);
@@ -237,7 +237,7 @@ app.post("/api/users/login", async (req, res) => {
     
 
     req.session.user = user;
-    console.log("Login successful for", user.username);
+    console.log("Registration/ Login successful for", user.username);
     res.redirect("/");
   } catch (err) {
     console.error("Login error:", err);
