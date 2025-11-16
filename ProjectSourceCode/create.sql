@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS "posts" (
   "location" varchar,
   "image_url" varchar,
   "is_active" boolean DEFAULT true,
-  "created_at" timestamp DEFAULT (now())
+  "created_at" timestamp DEFAULT (now()),
+  "contact_info" varchar
 );
 
 CREATE TABLE IF NOT EXISTS "categories" (

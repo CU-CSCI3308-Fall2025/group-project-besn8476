@@ -319,14 +319,117 @@ app.get("/api/posts/user/:userId", (req, res) => {
 
 
 // create post
-app.post("/api/posts", (req, res) => {
-  
+app.post("/api/posts", async (req, res) => {
+  const {
+    user_id,
+    title,
+    description,
+    price,
+    category_id,
+    condition,
+    location,
+    image_url,
+    contact_info
+  } = req.body;
+
+  try {
+    // Validate user and title
+    if (!user_id || !title) {
+      return res.status(400).json({
+        error: "user_id and title are required."
+      });
+    }
+
+    // Check if the user exists (foreign key constraint)
+    const existingUser = await db.oneOrNone(
+      "SELECT id FROM users WHERE id = $1",
+      [user_id]
+    );
+    if (!existingUser) {
+      return res.status(404).json({
+        error: "User does not exist."
+      });
+    }
+
+    // Check category exists (if provided)
+    if (category_id) {
+      const categoryExists = await db.oneOrNone(
+        "SELECT id FROM categories WHERE id = $1",
+        [category_id]
+      );
+      if (!categoryExists) {
+        return res.status(404).json({
+          error: "Category does not exist."
+        });
+      }
+    }
+
+    // Insert the post
+    const newPost = await db.one(
+      `INSERT INTO posts 
+        (user_id, title, description, price, category_id, condition, location, image_url, contact_info)
+       VALUES 
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        user_id,
+        title,
+        description || null,
+        price || null,
+        category_id || null,
+        condition || null,
+        location || null,
+        image_url || null,
+        contact_info || null
+      ]
+    );
+
+
+    res.status(201).json({
+      message: "Post created successfully.",
+      post: newPost
+    });
+  } catch (err) {
+    console.error("Error creating post:", err); 
+    res.status(500).json({
+      error: "Failed to create post."
+    });
+  }
 });
 
 // edit post by id
-app.put("/api/posts/:postId", (req, res) => {
+app.put("/api/posts/:postId", async (req, res) => {
+  const { postId } = req.params;
+  const { title, description, price, category_id, status } = req.body;
 
+  try {
+    const updatedPost = await db.oneOrNone(
+      `UPDATE posts
+       SET title = $1,
+           description = $2,
+           price = $3,
+           category_id = $4,
+           status = $5,
+           updated_at = NOW()
+       WHERE id = $6
+       RETURNING id, title, description, price, category_id, status, created_at, updated_at;`,
+      [title, description, price, category_id, status, postId]
+    );
+
+    if (!updatedPost) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    res.status(200).json({
+      message: "Post updated successfully",
+      post: updatedPost,
+    });
+  } catch (err) {
+    console.error("Error updating post:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
 
 
 // delete post by id
