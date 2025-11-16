@@ -303,8 +303,27 @@ app.get("/api/users/:userId", async (req, res) => {
 ////////////////////
 
 // get all posts
-app.get("/api/posts", (req, res) => {
-  
+app.get("/api/posts", async (req, res) => {
+  try {
+    const posts = await db.any(`
+      SELECT 
+        posts.*,
+        users.username,
+        categories.name AS category_name
+      FROM posts
+      LEFT JOIN users ON posts.user_id = users.id
+      LEFT JOIN categories ON posts.category_id = categories.id
+      ORDER BY posts.created_at DESC
+    `);
+
+    res.json({
+      count: posts.length,
+      posts: posts
+    });
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    res.status(500).json({ error: "Failed to fetch posts." });
+  }
 });
 
 // get post by id
@@ -319,8 +338,80 @@ app.get("/api/posts/user/:userId", (req, res) => {
 
 
 // create post
-app.post("/api/posts", (req, res) => {
-  
+app.post("/api/posts", async (req, res) => {
+  const {
+    user_id,
+    title,
+    description,
+    price,
+    category_id,
+    condition,
+    location,
+    image_url
+  } = req.body;
+
+  try {
+    // Validate user and title
+    if (!user_id || !title) {
+      return res.status(400).json({
+        error: "user_id and title are required."
+      });
+    }
+
+    // Check if the user exists (foreign key constraint)
+    const existingUser = await db.oneOrNone(
+      "SELECT id FROM users WHERE id = $1",
+      [user_id]
+    );
+    if (!existingUser) {
+      return res.status(404).json({
+        error: "User does not exist."
+      });
+    }
+
+    // Check category exists (if provided)
+    if (category_id) {
+      const categoryExists = await db.oneOrNone(
+        "SELECT id FROM categories WHERE id = $1",
+        [category_id]
+      );
+      if (!categoryExists) {
+        return res.status(404).json({
+          error: "Category does not exist."
+        });
+      }
+    }
+
+    // Insert the post
+    const newPost = await db.one(
+      `INSERT INTO posts 
+        (user_id, title, description, price, category_id, condition, location, image_url)
+       VALUES 
+        ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        user_id,
+        title,
+        description || null,
+        price || null,
+        category_id || null,
+        condition || null,
+        location || null,
+        image_url || null
+      ]
+    );
+
+    
+    res.status(201).json({
+      message: "Post created successfully.",
+      post: newPost
+    });
+  } catch (err) {
+    console.error("Error creating post:", err);
+    res.status(500).json({
+      error: "Failed to create post."
+    });
+  }
 });
 
 // edit post by id
