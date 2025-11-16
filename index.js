@@ -207,10 +207,10 @@ app.post("/api/users/register", async (req, res) => {
       [username, hashedPassword, email, phone_number]
     );
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user: newUser,
-    });
+    // user will be auto logged in once registered
+    req.session.user = newUser;
+    console.log("Login successful for", newUser.username);
+    res.redirect("/");
 
   } catch (err) {
     console.error("Error registering user:", err);
@@ -237,7 +237,7 @@ app.post("/api/users/login", async (req, res) => {
     
 
     req.session.user = user;
-    console.log("Login successful for", user.username);
+    console.log("Registration/ Login successful for", user.username);
     res.redirect("/");
   } catch (err) {
     console.error("Login error:", err);
@@ -303,8 +303,27 @@ app.get("/api/users/:userId", async (req, res) => {
 ////////////////////
 
 // get all posts
-app.get("/api/posts", (req, res) => {
-  
+app.get("/api/posts", async (req, res) => {
+  try {
+    const posts = await db.any(`
+      SELECT 
+        posts.*,
+        users.username,
+        categories.name AS category_name
+      FROM posts
+      LEFT JOIN users ON posts.user_id = users.id
+      LEFT JOIN categories ON posts.category_id = categories.id
+      ORDER BY posts.created_at DESC
+    `);
+
+    res.json({
+      count: posts.length,
+      posts: posts
+    });
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    res.status(500).json({ error: "Failed to fetch posts." });
+  }
 });
 
 // get post by id
