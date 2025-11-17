@@ -104,9 +104,18 @@ app.get("/login", (req, res) => {
 // LOGOUT
 app.get("/logout", (req, res) => {
   console.log("🔐 Rendering login.hbs");
-  res.render('pages/logout', {
-    layout: false,
-    title: "Logout - CU Marketplace",
+  req.session.destroy(err => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).send("Error logging out");
+    }
+
+    res.clearCookie("connect.sid");// delete session cookie
+
+    res.render("pages/logout", {
+      layout: false,
+      title: "You have been logged out"
+    });
   });
 });
 
@@ -246,6 +255,8 @@ app.post("/api/users/login", async (req, res) => {
 });
 
 // logout user
+// moving logic into logout page render
+/*
 app.post("/api/users/logout", (req, res) => {
   // If the user is logged in, destroy the session
   req.session.destroy((err) => {
@@ -257,6 +268,7 @@ app.post("/api/users/logout", (req, res) => {
     res.json({ message: "Logged out successfully" });
   });
 });
+*/
 
 
 // return all users

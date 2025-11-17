@@ -45,7 +45,7 @@ describe("Register API", () => {
     expect(res.body.error).to.equal("Username and password are required.");
   });
 });
-*/
+
 
 //  LOGIN TESTS
 
@@ -112,3 +112,5 @@ describe("Get Users API", () => {
     expect(res.status).to.be.oneOf([404, 500]); 
   });
 });
+
+*/
