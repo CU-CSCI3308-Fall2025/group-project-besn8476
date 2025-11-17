@@ -10,9 +10,37 @@
         <p class="hero-subtext">
             Welcome back, {{user.username}}!
         </p>
-        <div class="hero-buttons">
-            <a href="/browse" class="btn">Browse Listings</a>
-            <a href="/post" class="btn btn-secondary">Post an Item</a>
+        <div class="hero-buttons"> <!-- START MODAL -->
+            <a href="/post" class="btn">Browse Listings</a>
+
+            <div class="custom-container">
+                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#post_modal">Create Post</button>
+            </div>
+            <div class="modal" tabindex="-1" id="post_modal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create Post</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="post" action="/api/posts" method="post">
+                                <input type="text" id="title" placeholder="Post Title" />
+                                <input type="text" id="description" placeholder="Item Desc" />
+                                <input type="number" id="price" step="0.01" placeholder="0.00" />
+                                <select id="category_id" required>
+                                    <option value="1">Test Category</option>
+                                </select>
+                                <input type="text" id="condition" placeholder="Item Condition" />
+                                <input type="text" id="location" placeholder="Location" />
+                                <input type="email" id="contact_info" placeholder="Email" />
+                                <input type="url" id="image_url" placeholder="Image URL" />
+                                <input type="submit" data-bs-dismiss="modal"/>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- END MODAL -->
             <a href="/logout" class="btn btn-ghost">Logout</a>
         </div>
     {{else}}
