@@ -186,6 +186,15 @@ app.post("/api/users/register", async (req, res) => {
       return res.status(400).json({ error: "Username and password are required." });
     }
 
+    // CU Boulder email validation
+    const cuEmailRegex = /^[A-Za-z0-9._%+-]+@colorado\.edu$/;
+
+    if (!cuEmailRegex.test(email)) {
+      return res.status(400).json({
+        error: "Email must be a valid @colorado.edu address."
+      });
+    }
+
     // Check if username or email already exists
     const existingUser = await db.oneOrNone(
       `SELECT * FROM users WHERE username = $1 OR email = $2`,
