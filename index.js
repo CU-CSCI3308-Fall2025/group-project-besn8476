@@ -120,47 +120,42 @@ app.get("/register", (req, res) => {
 });
 
 // POST ITEM
-app.get("/post", (req, res) => {
+app.get("/post", async (req, res) => {
   console.log("Rendering post_card.hbs");
   
-  //temporary mock data for testing
-  const sampleResults = [{
-    name: "CSCI 2270 Textbook",
-      product: { info: "Gently used, 8/10 condition" },
-      user: { contact: "mike@colorado.edu" },
-      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
-    },
-    {
-      name: "Mini Fridge",
-      product: { info: "Works perfectly, pickup only" },
-      user: { contact: "student1@colorado.edu" },
-      images: [{ url: "https://via.placeholder.com/400x250?text=Mini+Fridge" }]
-    },
-    {
-      name: "TI-84 Calculator",
-      product: { info: "Like new, includes batteries" },
-      user: { contact: "jane@colorado.edu" },
-      images: [{ url: "https://via.placeholder.com/400x250?text=Calculator" }]
-    },
-    {
-        name: "1993 Honda Accord",
-      product: { info: "Has Flintsone-esq engine" },
-      user: { contact: "fred@colorado.edu" },
-      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
-    },
-    {
-        name: "Dog",
-      product: { info: "One (1) Dog" },
-      user: { contact: "singulardog@colorado.edu" },
-      images: [{ url: "https://via.placeholder.com/400x250?text=Textbook" }]
-    }];
+  try {
+    // fetch posts directly from DB
+    const posts = await db.any(`
+      SELECT 
+        posts.*,
+        users.username,
+        users.email AS contact_info,
+        categories.name AS category_name
+      FROM posts
+      LEFT JOIN users ON posts.user_id = users.id
+      LEFT JOIN categories ON posts.category_id = categories.id
+      ORDER BY posts.created_at DESC
+    `);
 
-  res.render("pages/post_card", {
-    layout: false,
-    title: "Post an Item - CU Marketplace",
-    results: sampleResults,
-    message: "Sample items loaded successfully.",
-  });
+    // format for Handlebars
+    const formattedPosts = posts.map(p => ({
+      name: p.title,
+      product: { info: p.description },
+      user: { contact: p.contact_info },
+      images: [{ url: p.image_url }]
+    }));
+
+    res.render("pages/post_card", {
+      layout: false,
+      title: "Available Items - CU Marketplace",
+      results: formattedPosts,
+      message: "Items loaded successfully."
+    });
+
+  } catch (err) {
+    console.error("Error rendering posts page:", err);
+    res.status(500).send("Error loading posts");
+  }
 });
 
 // ---------- STATIC FILES (CSS, images, etc.) ----------
@@ -303,6 +298,9 @@ app.get("/api/users/:userId", async (req, res) => {
 ////////////////////
 
 // get all posts
+
+// get all posts will be moved into the posts page render
+/*
 app.get("/api/posts", async (req, res) => {
   try {
     const posts = await db.any(`
@@ -325,6 +323,7 @@ app.get("/api/posts", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch posts." });
   }
 });
+*/
 
 // get post by id
 app.get("/api/posts/:postId", (req, res) => {
