@@ -439,7 +439,7 @@ app.post("/api/posts", async (req, res) => {
 // edit post by id
 app.put("/api/posts/:postId", async (req, res) => {
   const { postId } = req.params;
-  const { title, description, price, category_id, status } = req.body;
+  const { title, description, price, category_id, is_active } = req.body;
 
   try {
     const updatedPost = await db.oneOrNone(
@@ -448,32 +448,46 @@ app.put("/api/posts/:postId", async (req, res) => {
            description = $2,
            price = $3,
            category_id = $4,
-           status = $5,
+           is_active = $5,
            updated_at = NOW()
        WHERE id = $6
-       RETURNING id, title, description, price, category_id, status, created_at, updated_at;`,
-      [title, description, price, category_id, status, postId]
+       RETURNING id, title, description, price, category_id, is_active, created_at, updated_at;`,
+      [title, description, Number(price), category_id, is_active, postId]
     );
 
     if (!updatedPost) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Post updated successfully",
       post: updatedPost,
     });
   } catch (err) {
     console.error("Error updating post:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 
 
 // delete post by id
-app.delete("/api/posts/:postId", (req, res) => {
+app.delete("/api/posts/:postId", async (req, res) => {
+  const { postId } = req.params;
 
+  try {
+    const result = await db.result(
+      `DELETE FROM posts WHERE id = $1`,
+      [postId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.status(200).json({ message: "Post deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting post:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 

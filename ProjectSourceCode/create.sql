@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS "posts" (
   "image_url" varchar,
   "is_active" boolean DEFAULT true,
   "created_at" timestamp DEFAULT (now()),
-  "contact_info" varchar
+  "contact_info" varchar,
+  "updated_at" timestamp DEFAULT (now())
 );
 
 CREATE TABLE IF NOT EXISTS "categories" (

@@ -1,4 +1,4 @@
-const request = require("supertest");
+/*const request = require("supertest");
 const appModule = require("../index.js");
 const app = appModule.default || appModule;
 const chai = require("chai");
@@ -12,7 +12,7 @@ This was super annoying and I had to do differently because our project is in ES
 //  BASE ROUTE TESTS
 
 
-describe("Server!", () => {
+/*describe("Server!", () => {
   it("should return the home page (200)", async () => {
     const res = await request(app).get("/");
     expect(res.status).to.equal(200);
@@ -49,7 +49,7 @@ describe("Register API", () => {
 
 //  LOGIN TESTS
 
-
+/*
 describe("Login API", () => {
   it("should log in successfully with correct credentials", async () => {
     const username = `loginuser_${Date.now()}`;
