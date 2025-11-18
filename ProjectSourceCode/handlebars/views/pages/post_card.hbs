@@ -5,6 +5,19 @@
 <section class="section">
   <h2 class="section-title">Available Items</h2>
   <div class="container">
+    <form action="/api/posts/search" method="GET" class="search-bar">
+      <input 
+        type="text" 
+        name="q"
+        placeholder="Search items..."
+        value="{{query}}"
+        class="search-input"
+      >
+      <button type="submit" class="btn btn-secondary">Search</button>
+
+      <a href="/post" class="btn btn-ghost">Clear</a>
+    </form>
+
     <div class="row row-cols-1 row-cols-md-3 g-4">  
         {{#each results}}
           <div class="col">
