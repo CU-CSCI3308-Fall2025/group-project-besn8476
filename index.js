@@ -158,6 +158,7 @@ app.get("/post", async (req, res) => {
       layout: false,
       title: "Available Items - CU Marketplace",
       results: formattedPosts,
+      query: "", // empty search
       message: "Items loaded successfully."
     });
 
@@ -167,10 +168,7 @@ app.get("/post", async (req, res) => {
   }
 });
 
-// ---------- STATIC FILES (CSS, images, etc.) ----------
 
-// This MUST be after the routes so it doesn't override "/"
-app.use(express.static("ProjectSourceCode"));
 
 // ------------------------------
 
@@ -346,10 +344,7 @@ app.get("/api/posts", async (req, res) => {
 });
 */
 
-// get post by id
-app.get("/api/posts/:postId", (req, res) => {
-  
-});
+
 
 // get posts by user id
 app.get("/api/posts/user/:userId", (req, res) => {
@@ -478,9 +473,52 @@ app.delete("/api/posts/:postId", (req, res) => {
 
 
 // get posts by search keyword
-//app.get("/api/posts/search?q=keyword", (req, res) => {
+app.get("/api/posts/search", async (req, res) => {
 
-//});
+  try {
+    const q = req.query.q || "";    
+    // search checks the title, description, location, condition
+    const posts = await db.any(`
+      SELECT 
+        posts.*,
+        users.username,
+        users.email AS contact_info,
+        categories.name AS category_name
+      FROM posts
+      LEFT JOIN users ON posts.user_id = users.id
+      LEFT JOIN categories ON posts.category_id = categories.id
+      WHERE 
+        posts.title ILIKE $1
+        OR posts.description ILIKE $1
+        OR posts.location ILIKE $1
+        OR posts.condition ILIKE $1
+      ORDER BY posts.created_at DESC;
+    `, [`%${q}%`]);
+
+    const formattedPosts = posts.map(p => ({
+      name: p.title,
+      product: { info: p.description },
+      user: { contact: p.contact_info },
+      images: [{ url: p.image_url }]
+    }));
+
+
+    // re-render page with different only searched for posts
+    res.render("pages/post_card", {
+      layout: false,
+      title: `Search results for "${q}"`,
+      results: formattedPosts,
+      query: q,   // keeps the text in the search input
+      message: "Items loaded successfully."
+      
+    });
+    
+
+  } catch (err) {
+    console.error("Search error:", err);
+    res.status(500).send("Error searching posts");
+  }
+});
 
 // get posts by category name
 app.get("/api/posts/category/:name", (req, res) => {
@@ -490,6 +528,11 @@ app.get("/api/posts/category/:name", (req, res) => {
 // update post status (available, sold)
 app.patch("/api/posts/:postId/status", (req, res) => {
 
+});
+
+// get post by id
+app.get("/api/posts/:postId", (req, res) => {
+  
 });
 
 
@@ -572,8 +615,17 @@ app.delete("/api/categories/:categoryId", async (req, res) => {
 });
 
 
+// ---------- STATIC FILES (CSS, images, etc.) ----------
+
+// This MUST be after the routes so it doesn't override "/"
+app.use(express.static("ProjectSourceCode"));
+
+
+
 // <!-- Start Server-->
 app.listen(4444);
 console.log('Server is listening on port 4444');
+
+
 
 export default app;
