@@ -37,6 +37,18 @@
                         <strong>Contact:</strong> {{user.contact}}
                       {{/if}}
                     </p>
+
+                    <!-- Button to open modal -->
+                    <button
+                      type="button"
+                      class="btn post-card-view"
+                      data-name="{{name}}"
+                      data-description="{{product.info}}"
+                      data-contacts="{{user.contact}}"
+                      data-img="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
+                    >
+                      View Details
+                    </button>
                 </div>
             </div>
           </div>
@@ -44,4 +56,19 @@
     </div>
   </div>
 </section>
+
+<!-- Modal for item details  -->
+<div id="post-modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <button class="post-modal-close modal-close" aria-label="Close">&times;</button>
+    <img id="modal-image" class="modal-image" alt="Post image">
+    <h3 id="modal-title"></h3>
+    <p id="modal-description"></p>
+    <p id="modal-contact" class="modal-contact"></p>
+  </div>
+</div>
+
+
 {{>footer}}
+
+<script src="/modal.js"></script>
