@@ -368,11 +368,17 @@ app.post("/api/posts", async (req, res) => {
 
   try {
     // Validate user and title
-    if (!user_id || !title) {
+    if (!user_id ) {
       return res.status(400).json({
-        error: "user_id and title are required."
+        error: "user_id is required."
       });
     }
+    if (!title) {
+      return res.status(400).json({
+        error: "title is required."
+      });
+    }
+
 
     // Check if the user exists (foreign key constraint)
     const existingUser = await db.oneOrNone(
@@ -386,17 +392,16 @@ app.post("/api/posts", async (req, res) => {
     }
 
     // Check category exists (if provided)
-    if (category_id) {
+    if (category_id !== undefined && category_id !== null && category_id !== "") {
       const categoryExists = await db.oneOrNone(
         "SELECT id FROM categories WHERE id = $1",
         [category_id]
       );
       if (!categoryExists) {
-        return res.status(404).json({
-          error: "Category does not exist."
-        });
+        return res.status(404).json({ error: "Category does not exist." });
       }
     }
+    
 
     // Insert the post
     const newPost = await db.one(
@@ -418,11 +423,9 @@ app.post("/api/posts", async (req, res) => {
       ]
     );
 
+        
+    return res.redirect("/post");
 
-    res.status(201).json({
-      message: "Post created successfully.",
-      post: newPost
-    });
   } catch (err) {
     console.error("Error creating post:", err); 
     res.status(500).json({
