@@ -5,6 +5,8 @@ When Docker container is opend and running, run the following command in termina
 docker exec -it project_web node ProjectSourceCode/seed.js
 */
 ////////////////////////
+// ***** ONLY RUN WHEN DATABASE IS EMPTY ***** //
+// ***** WE DO NOT NEED DUPLICATE POSTS ***** //
 
 import pgPromise from "pg-promise";
 import dotenv from "dotenv";
