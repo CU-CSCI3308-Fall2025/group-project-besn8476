@@ -77,17 +77,31 @@ app.use(express.urlencoded({ extended: true }));
 
 // ---------- ROUTES ----------
 // HOME – this is what / should show
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   console.log("🏠 Rendering home.hbs");
 
   const loggedIn = !!req.session.user; // true if user session exists
   const user = req.session.user; 
+
+  let categories = [];
+
+  try{
+    categories = await db.any(`
+      SELECT id, name
+      FROM categories
+      ORDER BY name ASC;
+    `);
+  }catch(err){
+    console.error("Error fetching categories:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 
   res.render('pages/home.hbs', {
     layout: false,
     title: "CU Marketplace",
     loggedIn,
     user,
+    categories,
   });
 });
 
@@ -558,6 +572,8 @@ app.get("/api/posts/:postId", (req, res) => {
 ////////////////////
 
 // get all categories
+// adding this directly into the home page render
+/*
 app.get("/api/categories", async (req, res) => {
   try{
     const categories = await db.any(`
@@ -571,6 +587,7 @@ app.get("/api/categories", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+*/
 
 // get category by id
 app.get("/api/categories/:categoryId", async (req, res) => {

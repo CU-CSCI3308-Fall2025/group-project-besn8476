@@ -26,16 +26,18 @@
                         <div class="modal-body">
                             <form id="post" action="/api/posts" method="post">
                                 <input type="hidden" name="user_id" value="{{user.id}}">
+                                <input type="hidden" name="contact_info" value="{{user.email}}" />
                                 <input type="text" name="title" id="title" placeholder="Post Title" />
                                 <input type="text" name="description" id="description" placeholder="Item Desc" />
                                 <input type="number" name="price" id="price" step="0.01" placeholder="0.00" />
                                 <select id="category_id" name="category_id">
                                     <option value="">No category</option>
-                                    <option value="1">Test Category</option>
+                                    {{#each categories}}
+                                        <option value="{{this.id}}">{{this.name}}</option>
+                                    {{/each}}
                                 </select>
                                 <input type="text" name="condition" id="condition" placeholder="Item Condition" />
                                 <input type="text" name="location" id="location" placeholder="Location" />
-                                <input type="email" name="contact_info" id="contact_info" placeholder="Email" />
                                 <input type="url" name="image_url" id="image_url" placeholder="Image URL" />
                                 <input type="submit" data-bs-dismiss="modal"/>
                             </form>
