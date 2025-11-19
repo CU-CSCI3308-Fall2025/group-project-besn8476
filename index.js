@@ -487,8 +487,10 @@ app.delete("/api/posts/:postId", async (req, res) => {
   } catch (err) {
     console.error("Error deleting post:", err);
     res.status(500).json({ error: "Internal server error" });
+
   }
 });
+
 
 
 // get posts by search keyword
