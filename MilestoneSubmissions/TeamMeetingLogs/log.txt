@@ -48,3 +48,22 @@ Wed Nov 12:
         Talked about doing Lab 10 a different way since we used ES Modules. TA told team it was ok
 
 
+Wed Nov 19
+	What will get worked on
+        Ben S will work on seed file and view your own posts page
+        Connor will final polish and whatever needs to be done.
+        Ben B is planning on finishing up the apis as well as implementing tests for overall QA
+        Michael will fix and debug the post detail modal
+
+    Since last meeting
+        Ben S added a search bar, connected create post endpoint to front end, linked the database to the view posts page, connected logout endpoint to front end, and a lot of debugging
+        Connor created the Post form, and fixed a number of bugs last week.
+        Ben B worked on the edit post, delete post, and adding a few things to the database like updated_by and another I cannot remember (Connor asked for it for frontend)
+        Michael worked on modal UI and script for viewing post details
+
+
+    Challenges
+        Scope issues, order endpoints were defined was causing the system some confusion
+        issues with the server, but that was fixed fairly quickly
+
+
