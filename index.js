@@ -17,11 +17,18 @@ const __dirname = import.meta.dirname;
 const isProduction = process.env.NODE_ENV === "production";
 
 const hbs = handlebars.create({
-  extname: 'hbs',
-  layoutsDir: 'ProjectSourceCode/handlebars/views/layouts',
-  partialsDir: 'ProjectSourceCode/handlebars/views/partials',
+  extname: "hbs",
+  layoutsDir: "ProjectSourceCode/handlebars/views/layouts",
+  partialsDir: "ProjectSourceCode/handlebars/views/partials",
 });
 
+// Helpers
+hbs.handlebars.registerHelper("formatDate", (value) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+});
 
 const pgp = pgPromise();
 
@@ -39,9 +46,8 @@ const connectionString = process.env.DATABASE_URL
 const db = pgp({
   connectionString,
   // Render-managed Postgres requires SSL; local usually not.
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
-
 
 // test database
 db.connect()
@@ -53,15 +59,14 @@ db.connect()
     console.log("ERROR:", error.message || error);
   });
 
-
 // <!-- App Settings -->
 // Handlebars setup
-app.engine('hbs', hbs.engine);
-app.set('view engine', 'hbs');
-app.set('views', 'ProjectSourceCode/handlebars/views');
+app.engine("hbs", hbs.engine);
+app.set("view engine", "hbs");
+app.set("views", "ProjectSourceCode/handlebars/views");
 
 if (isProduction) {
-  app.set('trust proxy', 1); // so secure cookies work on Render
+  app.set("trust proxy", 1); // so secure cookies work on Render
 }
 
 app.use(bodyParser.json());
@@ -89,33 +94,28 @@ app.use((req, res, next) => {
 // Parse form submissions (for later)
 app.use(express.urlencoded({ extended: true }));
 
-
-
-
-
-
 // ---------- ROUTES ----------
 // HOME – this is what / should show
 app.get("/", async (req, res) => {
   console.log("🏠 Rendering home.hbs");
 
   const loggedIn = !!req.session.user; // true if user session exists
-  const user = req.session.user; 
+  const user = req.session.user;
 
   let categories = [];
 
-  try{
+  try {
     categories = await db.any(`
       SELECT id, name
       FROM categories
       ORDER BY name ASC;
     `);
-  }catch(err){
+  } catch (err) {
     console.error("Error fetching categories:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 
-  res.render('pages/home.hbs', {
+  res.render("pages/home.hbs", {
     layout: false,
     title: "CU Marketplace",
     loggedIn,
@@ -124,11 +124,10 @@ app.get("/", async (req, res) => {
   });
 });
 
-
 // LOGIN
 app.get("/login", (req, res) => {
   console.log("🔐 Rendering login.hbs");
-  res.render('pages/login', {
+  res.render("pages/login", {
     layout: false,
     title: "Login - CU Marketplace",
   });
@@ -137,17 +136,17 @@ app.get("/login", (req, res) => {
 // LOGOUT
 app.get("/logout", (req, res) => {
   console.log("🔐 Rendering login.hbs");
-  req.session.destroy(err => {
+  req.session.destroy((err) => {
     if (err) {
       console.error("Logout error:", err);
       return res.status(500).send("Error logging out");
     }
 
-    res.clearCookie("connect.sid");// delete session cookie
+    res.clearCookie("connect.sid"); // delete session cookie
 
     res.render("pages/logout", {
       layout: false,
-      title: "You have been logged out"
+      title: "You have been logged out",
     });
   });
 });
@@ -155,16 +154,69 @@ app.get("/logout", (req, res) => {
 // REGISTER
 app.get("/register", (req, res) => {
   console.log("📝 Rendering register.hbs");
-  res.render('pages/register', {
+  res.render("pages/register", {
     layout: false,
     title: "Register - CU Marketplace",
   });
 });
 
+// MY_ACCOUNT
+app.get("/my-account", async (req, res) => {
+  console.log("👤 Rendering my_account.hbs");
+  const loggedIn = !!req.session.user; // true if user session exists
+  const user = req.session.user;
+  const userID = user ? user.id : null;
+  const joinDate = user?.createdAt || user?.created_at || null;
+
+  if (!loggedIn || !userID) {
+    return res.redirect("/login");
+  }
+
+  try {
+    const posts = await db.any(`
+        SELECT 
+          posts.*,
+          users.username,
+          users.email AS contact_info,
+          categories.name AS category_name
+        FROM posts
+        LEFT JOIN users ON posts.user_id = users.id
+        LEFT JOIN categories ON posts.category_id = categories.id
+        WHERE posts.user_id = $1
+        ORDER BY posts.created_at DESC;
+      `, [userID]);
+
+    const formattedPosts = posts.map(p => ({
+      id: p.id,
+      name: p.title,
+      product: { info: p.description },
+      user: { contact: p.contact_info },
+      images: [{ url: p.image_url }],
+      condition: p.condition,
+      price: p.price !== null && p.price !== undefined ? Number(p.price).toFixed(2) : null,
+      location: p.location,
+      listed: p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null,
+      category: p.category_name
+    }));
+
+    res.render("pages/my_account", {
+      layout: false,
+      title: "My Account - CU Marketplace",
+      loggedIn,
+      user,
+      joinDate,
+      posts: formattedPosts,
+    });
+  } catch (err) {
+    console.error("Error rendering account:", err);
+    return res.status(500).send("Error loading account");
+  }
+});
+
 // POST ITEM
 app.get("/post", async (req, res) => {
   console.log("Rendering post_card.hbs");
-  
+
   try {
     // fetch posts directly from DB
     const posts = await db.any(`
@@ -180,15 +232,24 @@ app.get("/post", async (req, res) => {
     `);
 
     // format for Handlebars
-    const formattedPosts = posts.map(p => ({
+    const formattedPosts = posts.map((p) => ({
       name: p.title,
       product: { info: p.description },
       user: { contact: p.contact_info },
       images: [{ url: p.image_url }],
       condition: p.condition,
-      price: p.price !== null && p.price !== undefined ? Number(p.price).toFixed(2) : null,
+      price:
+        p.price !== null && p.price !== undefined
+          ? Number(p.price).toFixed(2)
+          : null,
       location: p.location,
-      listed: p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
+      listed: p.created_at
+        ? new Date(p.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : null,
     }));
 
     res.render("pages/post_card", {
@@ -196,20 +257,15 @@ app.get("/post", async (req, res) => {
       title: "Available Items - CU Marketplace",
       results: formattedPosts,
       query: "", // empty search
-      message: "Items loaded successfully."
+      message: "Items loaded successfully.",
     });
-
   } catch (err) {
     console.error("Error rendering posts page:", err);
     res.status(500).send("Error loading posts");
   }
 });
 
-
-
 // ------------------------------
-
-
 
 ////////////////////
 // USER ENDPOINTS //
@@ -222,7 +278,9 @@ app.post("/api/users/register", async (req, res) => {
 
     // Basic validation
     if (!username || !password) {
-      return res.status(400).json({ error: "Username and password are required." });
+      return res
+        .status(400)
+        .json({ error: "Username and password are required." });
     }
 
     // CU Boulder email validation
@@ -230,7 +288,7 @@ app.post("/api/users/register", async (req, res) => {
 
     if (!cuEmailRegex.test(email)) {
       return res.status(400).json({
-        error: "Email must be a valid @colorado.edu address."
+        error: "Email must be a valid @colorado.edu address.",
       });
     }
 
@@ -241,10 +299,12 @@ app.post("/api/users/register", async (req, res) => {
     );
 
     if (existingUser) {
-      return res.status(409).json({ error: "Username or email already taken." });
+      return res
+        .status(409)
+        .json({ error: "Username or email already taken." });
     }
 
-    // Hash password 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert into DB
@@ -259,7 +319,6 @@ app.post("/api/users/register", async (req, res) => {
     req.session.user = newUser;
     console.log("Login successful for", newUser.username);
     res.redirect("/");
-
   } catch (err) {
     console.error("Error registering user:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -270,10 +329,9 @@ app.post("/api/users/register", async (req, res) => {
 app.post("/api/users/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await db.oneOrNone(
-      "SELECT * FROM users WHERE username = $1",
-      [username]
-    );
+    const user = await db.oneOrNone("SELECT * FROM users WHERE username = $1", [
+      username,
+    ]);
     if (!user) {
       return res.render("pages/login", { message: "User not found." });
     }
@@ -282,7 +340,6 @@ app.post("/api/users/login", async (req, res) => {
     if (!valid) {
       return res.render("pages/login", { message: "Incorrect password." });
     }
-    
 
     req.session.user = user;
     console.log("Registration/ Login successful for", user.username);
@@ -309,7 +366,6 @@ app.post("/api/users/logout", (req, res) => {
 });
 */
 
-
 // return all users
 app.get("/api/users", async (req, res) => {
   try {
@@ -329,25 +385,23 @@ app.get("/api/users", async (req, res) => {
 
 // get user by id
 app.get("/api/users/:userId", async (req, res) => {
-    try{
-      const {userId} = req.params;
-      const user = await db.oneOrNone(
-        `SELECT id, username, email, phone_number, created_at
+  try {
+    const { userId } = req.params;
+    const user = await db.oneOrNone(
+      `SELECT id, username, email, phone_number, created_at
         FROM users
         WHERE id = $1;`,
-        [userId]
-      );
-      if(!user){
-        return res.status(404).json({error: "User not found."});
-      }
-      res.status(200).json(user);
-    } catch(err){
-      console.error("Error fetching user:", err);
-      res.status(500).json({error: "Internal server error"});
+      [userId]
+    );
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
     }
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
-
-
 
 ////////////////////
 // POST ENDPOINTS //
@@ -381,13 +435,8 @@ app.get("/api/posts", async (req, res) => {
 });
 */
 
-
-
 // get posts by user id
-app.get("/api/posts/user/:userId", (req, res) => {
-
-});
-
+app.get("/api/posts/user/:userId", (req, res) => {});
 
 // create post
 app.post("/api/posts", async (req, res) => {
@@ -400,22 +449,21 @@ app.post("/api/posts", async (req, res) => {
     condition,
     location,
     image_url,
-    contact_info
+    contact_info,
   } = req.body;
 
   try {
     // Validate user and title
-    if (!user_id ) {
+    if (!user_id) {
       return res.status(400).json({
-        error: "user_id is required."
+        error: "user_id is required.",
       });
     }
     if (!title) {
       return res.status(400).json({
-        error: "title is required."
+        error: "title is required.",
       });
     }
-
 
     // Check if the user exists (foreign key constraint)
     const existingUser = await db.oneOrNone(
@@ -424,12 +472,16 @@ app.post("/api/posts", async (req, res) => {
     );
     if (!existingUser) {
       return res.status(404).json({
-        error: "User does not exist."
+        error: "User does not exist.",
       });
     }
 
     // Check category exists (if provided)
-    if (category_id !== undefined && category_id !== null && category_id !== "") {
+    if (
+      category_id !== undefined &&
+      category_id !== null &&
+      category_id !== ""
+    ) {
       const categoryExists = await db.oneOrNone(
         "SELECT id FROM categories WHERE id = $1",
         [category_id]
@@ -438,7 +490,6 @@ app.post("/api/posts", async (req, res) => {
         return res.status(404).json({ error: "Category does not exist." });
       }
     }
-    
 
     // Insert the post
     const newPost = await db.one(
@@ -456,17 +507,15 @@ app.post("/api/posts", async (req, res) => {
         condition || null,
         location || null,
         image_url || null,
-        contact_info || null
+        contact_info || null,
       ]
     );
 
-        
     return res.redirect("/post");
-
   } catch (err) {
-    console.error("Error creating post:", err); 
+    console.error("Error creating post:", err);
     res.status(500).json({
-      error: "Failed to create post."
+      error: "Failed to create post.",
     });
   }
 });
@@ -474,20 +523,33 @@ app.post("/api/posts", async (req, res) => {
 // edit post by id
 app.put("/api/posts/:postId", async (req, res) => {
   const { postId } = req.params;
-  const { title, description, price, category_id, is_active } = req.body;
+  const { title, description, price, category_id, is_active, condition, location, image_url } = req.body;
 
   try {
     const updatedPost = await db.oneOrNone(
       `UPDATE posts
-       SET title = $1,
-           description = $2,
-           price = $3,
-           category_id = $4,
-           is_active = $5,
+       SET title = COALESCE($1, title),
+           description = COALESCE($2, description),
+           price = COALESCE($3, price),
+           category_id = COALESCE($4, category_id),
+           is_active = COALESCE($5, is_active),
+           condition = COALESCE($6, condition),
+           location = COALESCE($7, location),
+           image_url = COALESCE($8, image_url),
            updated_at = NOW()
-       WHERE id = $6
-       RETURNING id, title, description, price, category_id, is_active, created_at, updated_at;`,
-      [title, description, Number(price), category_id, is_active, postId]
+       WHERE id = $9
+       RETURNING id, title, description, price, category_id, is_active, condition, location, image_url, created_at, updated_at;`,
+      [
+        title || null,
+        description || null,
+        price !== undefined && price !== null && !Number.isNaN(Number(price)) ? Number(price) : null,
+        category_id || null,
+        typeof is_active === "boolean" ? is_active : null,
+        condition || null,
+        location || null,
+        image_url || null,
+        postId
+      ]
     );
 
     if (!updatedPost) {
@@ -504,17 +566,12 @@ app.put("/api/posts/:postId", async (req, res) => {
   }
 });
 
-
-
 // delete post by id
 app.delete("/api/posts/:postId", async (req, res) => {
   const { postId } = req.params;
 
   try {
-    const result = await db.result(
-      `DELETE FROM posts WHERE id = $1`,
-      [postId]
-    );
+    const result = await db.result(`DELETE FROM posts WHERE id = $1`, [postId]);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Post not found" });
     }
@@ -522,19 +579,16 @@ app.delete("/api/posts/:postId", async (req, res) => {
   } catch (err) {
     console.error("Error deleting post:", err);
     res.status(500).json({ error: "Internal server error" });
-
   }
 });
 
-
-
 // get posts by search keyword
 app.get("/api/posts/search", async (req, res) => {
-
   try {
-    const q = req.query.q || "";    
+    const q = req.query.q || "";
     // search checks the title, description, location, condition
-    const posts = await db.any(`
+    const posts = await db.any(
+      `
       SELECT 
         posts.*,
         users.username,
@@ -549,31 +603,38 @@ app.get("/api/posts/search", async (req, res) => {
         OR posts.location ILIKE $1
         OR posts.condition ILIKE $1
       ORDER BY posts.created_at DESC;
-    `, [`%${q}%`]);
+    `,
+      [`%${q}%`]
+    );
 
-    const formattedPosts = posts.map(p => ({
+    const formattedPosts = posts.map((p) => ({
       name: p.title,
       product: { info: p.description },
       user: { contact: p.contact_info },
       images: [{ url: p.image_url }],
       condition: p.condition,
-      price: p.price !== null && p.price !== undefined ? Number(p.price).toFixed(2) : null,
+      price:
+        p.price !== null && p.price !== undefined
+          ? Number(p.price).toFixed(2)
+          : null,
       location: p.location,
-      listed: p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
+      listed: p.created_at
+        ? new Date(p.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : null,
     }));
-
 
     // re-render page with different only searched for posts
     res.render("pages/post_card", {
       layout: false,
       title: `Search results for "${q}"`,
       results: formattedPosts,
-      query: q,   // keeps the text in the search input
-      message: "Items loaded successfully."
-      
+      query: q, // keeps the text in the search input
+      message: "Items loaded successfully.",
     });
-    
-
   } catch (err) {
     console.error("Search error:", err);
     res.status(500).send("Error searching posts");
@@ -581,20 +642,13 @@ app.get("/api/posts/search", async (req, res) => {
 });
 
 // get posts by category name
-app.get("/api/posts/category/:name", (req, res) => {
-
-});
+app.get("/api/posts/category/:name", (req, res) => {});
 
 // update post status (available, sold)
-app.patch("/api/posts/:postId/status", (req, res) => {
-
-});
+app.patch("/api/posts/:postId/status", (req, res) => {});
 
 // get post by id
-app.get("/api/posts/:postId", (req, res) => {
-  
-});
-
+app.get("/api/posts/:postId", (req, res) => {});
 
 ////////////////////
 // CATEGORY ENDPOINTS
@@ -620,18 +674,21 @@ app.get("/api/categories", async (req, res) => {
 
 // get category by id
 app.get("/api/categories/:categoryId", async (req, res) => {
-  try{
+  try {
     const id = req.params.categoryId;
-    const category = await db.oneOrNone(`
+    const category = await db.oneOrNone(
+      `
       SELECT id, name
       FROM categories
       WHERE id = $1;
-    `, [id]);
-    if(!category){
-      return  res.status(404).json({ error: "Category not found" });
+    `,
+      [id]
+    );
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
     }
     res.json(category);
-  }catch(err){
+  } catch (err) {
     console.error("Error fetching category:", err);
     res.status(500).json({ error: "Internal server error" });
   }
@@ -639,21 +696,24 @@ app.get("/api/categories/:categoryId", async (req, res) => {
 
 // create new category
 app.post("/api/categories", async (req, res) => {
-  try{
+  try {
     const { name } = req.body;
-    if(!name){
+    if (!name) {
       return res.status(400).json({ error: "Category name is required" });
     }
-    const newCategory = await db.one(`
+    const newCategory = await db.one(
+      `
       INSERT INTO categories (name)
       VALUES ($1)
       RETURNING id, name;
-    `, [name]);
+    `,
+      [name]
+    );
     res.status(201).json({
       message: "Category created successfully",
       category: newCategory,
     });
-  }catch(err){
+  } catch (err) {
     console.error("Error creating category:", err);
     res.status(500).json({ error: "Internal server error" });
   }
@@ -661,36 +721,34 @@ app.post("/api/categories", async (req, res) => {
 
 // delete category by id
 app.delete("/api/categories/:categoryId", async (req, res) => {
-  try{
+  try {
     const id = req.params.categoryId;
-    const result = await db.result(`
+    const result = await db.result(
+      `
       DELETE FROM categories
       WHERE id = $1;
-    `, [id]);
-    if(result.rowCount === 0){
+    `,
+      [id]
+    );
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Category not found" });
     }
     res.status(200).json({ message: "Category deleted successfully" });
-  }catch(err){
+  } catch (err) {
     console.error("Error deleting category:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // ---------- STATIC FILES (CSS, images, etc.) ----------
 
 // This MUST be after the routes so it doesn't override "/"
 app.use(express.static("ProjectSourceCode"));
 
-
-
 // <!-- Start Server-->
 const PORT = process.env.PORT || 4444; // Render injects PORT; local defaults to 4444
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
-
-
 
 export default app;

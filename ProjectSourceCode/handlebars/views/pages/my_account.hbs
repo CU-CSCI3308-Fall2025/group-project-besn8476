@@ -1,0 +1,226 @@
+{{> head}}
+{{> siteheader}}
+
+<section class="section account-section">
+  {{#if loggedIn}}
+    <div class="account-header">
+      <div>
+        <p class="eyebrow">My Account</p>
+        <h2 class="section-title">Welcome, {{user.username}}</h2>
+        <div class="account-meta">
+          <span><strong>Email:</strong> {{user.email}}</span>
+          <span><strong>Member Since:</strong> {{formatDate joinDate}}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="account-cards-header">
+      <h3>Your Listings</h3>
+    </div>
+
+    {{#if posts.length}}
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        {{#each posts}}
+          <div class="col">
+            <div class="card">
+              <img
+                src="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png{{/if}}"
+                alt="{{name}}"
+                class="card-image"
+              >
+              <div class="card-body">
+                <h3 class="card-title">{{name}}</h3>
+                <div class="card-meta">
+                  {{#if condition}}<span class="pill pill-condition">{{condition}}</span>{{/if}}
+                  {{#if price}}<span class="pill pill-price">${{price}}</span>{{/if}}
+                </div>
+                <p class="card-description">
+                  {{#if product.info}}{{product.info}}{{else}}No description provided.{{/if}}
+                </p>
+                <div class="card-actions">
+                  <button
+                    type="button"
+                    class="btn post-card-view"
+                    data-id="{{id}}"
+                    data-name="{{name}}"
+                    data-description="{{product.info}}"
+                    data-contacts="{{user.contact}}"
+                    data-condition="{{condition}}"
+                    data-price="{{price}}"
+                    data-location="{{location}}"
+                    data-listed="{{listed}}"
+                    data-img="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png{{/if}}"
+                  >
+                    View Details
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary edit-post"
+                    data-id="{{id}}"
+                    data-name="{{name}}"
+                    data-price="{{price}}"
+                    data-condition="{{condition}}"
+                    data-location="{{location}}"
+                    data-img="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png{{/if}}"
+                    data-description="{{product.info}}"
+                  >
+                    Edit
+                  </button>
+                  <button type="button" class="btn btn-ghost delete-post" data-id="{{id}}">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p>You haven't posted anything yet.</p>
+    {{/if}}
+  {{else}}
+    <h2 class="section-title">Please log in to view your account details.</h2>
+  {{/if}}
+</section>
+
+{{!-- reuse modal from post cards --}}
+<div id="post-modal-backdrop" class="post-modal-backdrop hidden">
+  <div class="post-modal">
+    <button class="post-modal-close modal-close" aria-label="Close">&times;</button>
+    <img id="modal-image" class="modal-image" alt="Post image">
+    <h3 id="modal-title" class="modal-title"></h3>
+
+    <div class="modal-meta">
+      <span id="modal-condition" class="pill pill-condition"></span>
+      <span id="modal-price" class="pill pill-price"></span>
+    </div>
+
+    <div class="modal-details">
+      <p id="modal-description" class="modal-description"></p>
+      <p id="modal-contact" class="modal-contact"></p>
+      <p id="modal-location" class="modal-detail-line"></p>
+      <p id="modal-listed" class="modal-detail-line"></p>
+    </div>
+  </div>
+</div>
+
+{{!-- edit post modal --}}
+<div id="edit-modal-backdrop" class="post-modal-backdrop hidden">
+  <div class="post-modal">
+    <button class="post-modal-close edit-modal-close" aria-label="Close">&times;</button>
+    <h3 class="modal-title">Edit Listing</h3>
+    <form id="edit-post-form" class="create-post-form">
+      <input type="hidden" id="edit-id">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="edit-title">Title</label>
+          <input type="text" id="edit-title" required>
+        </div>
+        <div class="form-field">
+          <label for="edit-price">Price (USD)</label>
+          <input type="number" id="edit-price" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="edit-condition">Condition</label>
+          <input type="text" id="edit-condition">
+        </div>
+        <div class="form-field">
+          <label for="edit-location">Location</label>
+          <input type="text" id="edit-location">
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="edit-image">Image URL</label>
+        <input type="url" id="edit-image">
+      </div>
+      <div class="form-field">
+        <label for="edit-description">Description</label>
+        <textarea id="edit-description" rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost edit-cancel">Cancel</button>
+        <button type="submit" class="btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{{>footer}}
+
+
+<script src="/modal.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const editBackdrop = document.getElementById("edit-modal-backdrop");
+    const editForm = document.getElementById("edit-post-form");
+    const editFields = {
+      id: document.getElementById("edit-id"),
+      title: document.getElementById("edit-title"),
+      price: document.getElementById("edit-price"),
+      condition: document.getElementById("edit-condition"),
+      location: document.getElementById("edit-location"),
+      image: document.getElementById("edit-image"),
+      description: document.getElementById("edit-description"),
+    };
+
+    document.querySelectorAll(".delete-post").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        if (!id) return;
+        if (!confirm("Are you sure you want to delete this post?")) return;
+        try {
+          const resp = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+          if (!resp.ok) throw new Error("Failed to delete");
+          location.reload();
+        } catch (err) {
+          alert("Could not delete post.");
+        }
+      });
+    });
+
+    document.querySelectorAll(".edit-post").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const { id, name, price, condition, location, img, description } = btn.dataset;
+        editFields.id.value = id || "";
+        editFields.title.value = name || "";
+        editFields.price.value = price || "";
+        editFields.condition.value = condition || "";
+        editFields.location.value = location || "";
+        editFields.image.value = img || "";
+        editFields.description.value = description || "";
+        editBackdrop.classList.remove("hidden");
+      });
+    });
+
+    const closeEdit = () => editBackdrop.classList.add("hidden");
+    document.querySelector(".edit-modal-close")?.addEventListener("click", closeEdit);
+    document.querySelector(".edit-cancel")?.addEventListener("click", closeEdit);
+    editBackdrop?.addEventListener("click", (e) => {
+      if (e.target === editBackdrop) closeEdit();
+    });
+
+    editForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = editFields.id.value;
+      if (!id) return closeEdit();
+      const payload = {
+        title: editFields.title.value.trim(),
+        price: editFields.price.value ? Number(editFields.price.value) : null,
+        condition: editFields.condition.value.trim() || null,
+        location: editFields.location.value.trim() || null,
+        image_url: editFields.image.value.trim() || null,
+        description: editFields.description.value.trim() || null,
+      };
+      try {
+        const resp = await fetch(`/api/posts/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error("Failed to update");
+        location.reload();
+      } catch (err) {
+        alert("Could not update post.");
+      }
+    });
+  });
+</script>
