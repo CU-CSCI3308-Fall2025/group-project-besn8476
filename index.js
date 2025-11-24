@@ -1,4 +1,5 @@
 // <!-- Import Dependencies -->
+import "dotenv/config";
 import express from "express";
 const app = express();
 import handlebars from "express-handlebars";
@@ -13,6 +14,8 @@ import axios from "axios";
 const __dirname = import.meta.dirname;
 
 // <!-- Connect to DB -->
+const isProduction = process.env.NODE_ENV === "production";
+
 const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: 'ProjectSourceCode/handlebars/views/layouts',
@@ -24,11 +27,20 @@ const pgp = pgPromise();
 
 const DB_PORT = process.env.DB_PORT || 5432;
 
-// commented out for testing deployment
-//const DB_HOST = process.env.DB_HOST || "localhost";
-//const connectionString = `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${process.env.POSTGRES_DB}`;
-const connectionString = process.env.DATABASE_URL;
-const db = pgp(connectionString);
+const DB_HOST = process.env.DB_HOST || "db";
+const DB_NAME = process.env.POSTGRES_DB || "marketplace";
+const DB_USER = process.env.POSTGRES_USER || "postgres";
+const DB_PASSWORD = process.env.POSTGRES_PASSWORD || "postgres";
+
+const connectionString = process.env.DATABASE_URL
+  ? process.env.DATABASE_URL // Render will inject this
+  : `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
+
+const db = pgp({
+  connectionString,
+  // Render-managed Postgres requires SSL; local usually not.
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+});
 
 
 // test database
@@ -47,11 +59,16 @@ db.connect()
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', 'ProjectSourceCode/handlebars/views');
+
+if (isProduction) {
+  app.set('trust proxy', 1); // so secure cookies work on Render
+}
+
 app.use(bodyParser.json());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "dev-secret",
     saveUninitialized: false,
     resave: false,
   })
@@ -669,8 +686,10 @@ app.use(express.static("ProjectSourceCode"));
 
 
 // <!-- Start Server-->
-app.listen(4444);
-console.log('Server is listening on port 4444');
+const PORT = process.env.PORT || 4444; // Render injects PORT; local defaults to 4444
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});
 
 
 
