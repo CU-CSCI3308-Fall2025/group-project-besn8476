@@ -165,7 +165,11 @@ app.get("/post", async (req, res) => {
       name: p.title,
       product: { info: p.description },
       user: { contact: p.contact_info },
-      images: [{ url: p.image_url }]
+      images: [{ url: p.image_url }],
+      condition: p.condition,
+      price: p.price !== null && p.price !== undefined ? Number(p.price).toFixed(2) : null,
+      location: p.location,
+      listed: p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
     }));
 
     res.render("pages/post_card", {
@@ -532,7 +536,11 @@ app.get("/api/posts/search", async (req, res) => {
       name: p.title,
       product: { info: p.description },
       user: { contact: p.contact_info },
-      images: [{ url: p.image_url }]
+      images: [{ url: p.image_url }],
+      condition: p.condition,
+      price: p.price !== null && p.price !== undefined ? Number(p.price).toFixed(2) : null,
+      location: p.location,
+      listed: p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
     }));
 
 
