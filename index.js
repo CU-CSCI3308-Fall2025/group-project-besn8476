@@ -112,7 +112,7 @@ app.get("/", async (req, res) => {
     `);
   }catch(err){
     console.error("Error fetching categories:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 
   res.render('pages/home.hbs', {
