@@ -14,13 +14,20 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const pgp = pgPromise();
-const db = pgp({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 5432,
-  database: process.env.POSTGRES_DB,
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD
-});
+const dbConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    }
+  : {
+      host: process.env.DB_HOST || "localhost",
+      port: process.env.DB_PORT || 5432,
+      database: process.env.POSTGRES_DB,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD
+    };
+
+const db = pgp(dbConfig);
 
 export async function runSeed() {
   try {
@@ -55,7 +62,12 @@ export async function runSeed() {
       ON CONFLICT (username) DO NOTHING
       RETURNING id, username, email;
     `);
-    console.log(`✔ Users seeded: ${users.length}`);
+    // If conflicts prevented inserts (users already exist), fetch existing users
+    const seededUsers = users.length
+      ? users
+      : await db.any(`SELECT id, username, email FROM users ORDER BY id ASC LIMIT 5;`);
+
+    console.log(`✔ Users seeded/found: ${seededUsers.length}`);
 
     // Map categories by name for easier lookup
     const categoryMap = {};
@@ -188,9 +200,13 @@ export async function runSeed() {
       
 
     // insert posts
+    if (!seededUsers.length) {
+      throw new Error("No users available to attach posts");
+    }
+
     for (let i = 0; i < realPosts.length; i++) {
       const post = realPosts[i];
-      const user = users[i % users.length]; // rotate through all 5 users
+      const user = seededUsers[i % seededUsers.length]; // rotate through available users
 
       await db.none(
         `INSERT INTO posts 
