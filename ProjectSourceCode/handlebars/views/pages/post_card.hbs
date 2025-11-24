@@ -29,14 +29,17 @@
                 >
                 <div class="card-body">
                     <h3 class="card-title">{{name}}</h3>
-                    <p class="card-description">
-                      {{#if product.info}}
-                        <strong>Desc:</strong> {{product.info}}<br>
+
+                    <div class="card-meta">
+                      {{#if condition}}
+                        <span class="pill pill-condition">{{condition}}</span>
                       {{/if}}
-                      {{#if user.contact}}
-                        <strong>Contact:</strong> {{user.contact}}
+                      {{#if price}}
+                        <span class="pill pill-price">${{price}}</span>
+                      {{else}}
+                        <span class="pill pill-price muted">$—</span>
                       {{/if}}
-                    </p>
+                    </div>
 
                     <!-- Button to open modal -->
                     <button
@@ -45,6 +48,10 @@
                       data-name="{{name}}"
                       data-description="{{product.info}}"
                       data-contacts="{{user.contact}}"
+                      data-condition="{{condition}}"
+                      data-price="{{price}}"
+                      data-location="{{location}}"
+                      data-listed="{{listed}}"
                       data-img="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
                     >
                       View Details
@@ -58,13 +65,23 @@
 </section>
 
 <!-- Modal for item details  -->
-<div id="post-modal-backdrop" class="modal-backdrop hidden">
-  <div class="modal">
+<div id="post-modal-backdrop" class="post-modal-backdrop hidden">
+  <div class="post-modal">
     <button class="post-modal-close modal-close" aria-label="Close">&times;</button>
     <img id="modal-image" class="modal-image" alt="Post image">
-    <h3 id="modal-title"></h3>
-    <p id="modal-description"></p>
-    <p id="modal-contact" class="modal-contact"></p>
+    <h3 id="modal-title" class="modal-title"></h3>
+
+    <div class="modal-meta">
+      <span id="modal-condition" class="pill pill-condition"></span>
+      <span id="modal-price" class="pill pill-price"></span>
+    </div>
+
+    <div class="modal-details">
+      <p id="modal-description" class="modal-description"></p>
+      <p id="modal-contact" class="modal-contact"></p>
+      <p id="modal-location" class="modal-detail-line"></p>
+      <p id="modal-listed" class="modal-detail-line"></p>
+    </div>
   </div>
 </div>
 
