@@ -58,9 +58,13 @@
                                         <label for="category_id">Category</label>
                                         <select id="category_id" name="category_id">
                                             <option value="">No category</option>
-                                            {{#each categories}}
-                                                <option value="{{this.id}}">{{this.name}}</option>
-                                            {{/each}}
+                                            {{#if categories}}
+                                                {{#each categories}}
+                                                    <option value="{{this.id}}">{{this.name}}</option>
+                                                {{/each}}
+                                            {{else}}
+                                                <option disabled>No categories available</option>
+                                            {{/if}}
                                         </select>
                                     </div>
                                     <div class="form-field">
