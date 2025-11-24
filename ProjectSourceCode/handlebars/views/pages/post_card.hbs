@@ -23,7 +23,7 @@
           <div class="col">
             <div class="card">
                 <img
-                  src="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
+                  src="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png{{/if}}"
                   alt="{{name}}"
                   class="card-image"
                 >
@@ -52,7 +52,7 @@
                       data-price="{{price}}"
                       data-location="{{location}}"
                       data-listed="{{listed}}"
-                      data-img="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://via.placeholder.com/400x250?text=No+Image+Available{{/if}}"
+                      data-img="{{#if images.[0].url}}{{images.[0].url}}{{else}}https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png{{/if}}"
                     >
                       View Details
                     </button>
