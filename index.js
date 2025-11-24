@@ -22,10 +22,12 @@ const hbs = handlebars.create({
 
 const pgp = pgPromise();
 
-const DB_HOST = process.env.DB_HOST || "localhost";
 const DB_PORT = process.env.DB_PORT || 5432;
 
-const connectionString = `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${process.env.POSTGRES_DB}`;
+// commented out for testing deployment
+//const DB_HOST = process.env.DB_HOST || "localhost";
+//const connectionString = `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${process.env.POSTGRES_DB}`;
+const connectionString = process.env.DATABASE_URL;
 const db = pgp(connectionString);
 
 
