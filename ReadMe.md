@@ -34,7 +34,7 @@ The platform allows users to:
 
 The following team members contributed to CU-Marketplace:
 
-- Ben Snyder — Backend API development, database integration, seed data
+- Ben Snyder — Backend API development, database architecture/integration, seed data
 
 - Ben Baumert - Backend API development, testing/bug fixing, documentation
 
